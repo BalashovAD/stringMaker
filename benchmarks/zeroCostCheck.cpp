@@ -1,28 +1,18 @@
-#include <benchmark/benchmark.h>
-
-#include <format>
-
-#include "../include/strMaker/full.hpp"
-
-using namespace mkr;
-
-static constexpr int TEST_SIZE = 1000;
-using RingStorage = RingBufferStorageWrapper<TEST_SIZE, false>;
+#include "helper.hpp"
 
 template <typename Maker>
 static void BM_staticZeroCost(benchmark::State& state, Maker& maker) {
     for (auto _ : state) {
-        for (auto i = 0; i != TEST_SIZE; ++i) {
-            auto sv = maker.generate("testTEST", 1234);
-            benchmark::DoNotOptimize(sv);
-        }
+        runBenchBatch(state, maker, "testTEST", 1234);
     }
 }
 
 static void BM_staticZeroCostFormat(benchmark::State& state) {
     for (auto _ : state) {
-        auto sv = std::format("test{}ssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss{}", "testTEST", 1234);
-        benchmark::DoNotOptimize(sv);
+        for (auto i = 0u; i != TEST_SIZE; ++i) {
+            auto sv = std::format("test{}ssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss{}", "testTEST", 1234);
+            benchmark::DoNotOptimize(sv);
+        }
     }
 }
 
@@ -47,7 +37,7 @@ using AlotOfS = Aggregator<
         StaticStr<"s"_str>,StaticStr<"s"_str>,StaticStr<"s"_str>,StaticStr<"s"_str>,StaticStr<"s"_str>,StaticStr<"s"_str>,
         StaticStr<"s"_str>,StaticStr<"s"_str>,StaticStr<"s"_str>,StaticStr<"s"_str>,StaticStr<"s"_str>,StaticStr<"s"_str>,
         StaticStr<"s"_str>,StaticStr<"s"_str>,StaticStr<"s"_str>,StaticStr<"s"_str>,StaticStr<"s"_str>,StaticStr<"s"_str>,
-        RuntimeIntegral<unsigned>>;
+        RuntimeIntegral<unsigned>>; // 60 's'
 
 inline static auto staticCheckMultiStaticStr = Maker<AlotOfS, RingStorage::type>();
 inline static auto staticCheckMultiStaticStrDynamic = Maker<AlotOfS, RingStorage::type, DynamicConfig>();
@@ -69,8 +59,7 @@ BENCHMARK_CAPTURE(BM_staticZeroCost, misSize, misSize);
 template <typename Maker>
 static void BM_Quoted(benchmark::State& state, Maker& maker) {
     for (auto _ : state) {
-        auto sv = maker.generate("test");
-        benchmark::DoNotOptimize(sv);
+        runBenchBatch(state, maker, "test");
     }
 }
 
@@ -85,11 +74,17 @@ inline static auto quoted = Maker<
                 StaticStr<"_end"_str>>>();
 
 
-inline static auto aLotOfQuoted = Maker<
+inline static auto aLotOfQuoted3 = Maker<
+        Aggregator<
+                StaticStr<"start_"_str>, QuotedStr<QuotedStr<QuotedStr<RuntimeStr<10>, '@'>, '@'>, '@'>,
+                StaticStr<"_end"_str>>>();
+
+inline static auto aLotOfQuoted4 = Maker<
         Aggregator<
                 StaticStr<"start_"_str>, QuotedStr<QuotedStr<QuotedStr<QuotedStr<RuntimeStr<10>, '@'>, '@'>, '@'>, '@'>,
                 StaticStr<"_end"_str>>>();
 
 BENCHMARK_CAPTURE(BM_Quoted, noQuoted, noQuoted);
 BENCHMARK_CAPTURE(BM_Quoted, quoted, quoted);
-BENCHMARK_CAPTURE(BM_Quoted, aLotOfQuoted, aLotOfQuoted);
+BENCHMARK_CAPTURE(BM_Quoted, aLotOfQuoted3, aLotOfQuoted3);
+BENCHMARK_CAPTURE(BM_Quoted, aLotOfQuoted4, aLotOfQuoted4);

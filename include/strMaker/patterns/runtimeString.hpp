@@ -13,19 +13,19 @@ public:
     static constexpr bool needVariable = true;
     static constexpr IndexT maxSize = maxSizeParam;
 
-    template <IndexT Size, IsConfig Config>
-    void initMemory(Memory<Size>& mem, IndexT pos, Config const& cfg) const noexcept {
-        details::emptyInitMemory<maxSize>(mem, pos, cfg);
+    template <IsConfig Config>
+    void initMemory(CharIt mem, CharEnd end, Config const& cfg) const noexcept {
+        details::emptyInitMemory<maxSize>(mem, end, cfg);
     }
 
-    template <IndexT memSize, IsConfig Config>
-    IndexT generate(Memory<memSize>& mem, IndexT pos, Config const& cfg, std::string_view s) const noexcept {
+    template <IsConfig Config>
+    IndexT generate(CharIt mem, CharEnd end, Config const& cfg, std::string_view s) const noexcept {
         if (s.size() > maxSize) [[unlikely]] {
             cfg.errorEvent();
             return ERROR_INDEX;
         }
-        cfg.memcpy(mem.data() + pos, s.data(), s.size());
-        return pos + s.size();
+        cfg.memcpy(mem, s.data(), s.size());
+        return s.size();
     }
 };
 

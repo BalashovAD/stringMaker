@@ -22,14 +22,15 @@ public:
 
     template <IsConfig Cfg>
     void initMemory(Memory<maxSize>& memory, Cfg const& cfg) {
-        IndexT it = 0;
+        auto const end = memory.end();
+        auto const begin = memory.begin();
+        CharIt it = begin;
         details::foreachTupleId([&](auto const& pattern, auto) {
-            pattern.initMemory(memory, it, cfg);
-            memory.setInitialized(true);
+            pattern.initMemory(it, end, cfg);
             it += details::getSize<decltype(pattern)>();
         }, m_pattern);
 
-        assert(it == maxSize);
+        assert(std::distance(begin, it) == maxSize);
     }
 
 
@@ -38,9 +39,12 @@ public:
 
         static_assert(validateArgs<sizeof...(Args)>());
 
+        auto const begin = memory.begin();
+        auto const end = memory.end();
+        CharIt it = begin;
+
         auto argsTuple = std::forward_as_tuple(args...);
         bool hasError = false;
-        IndexT pos = 0;
 
         const bool needInit = needPreInitMemory<Cfg::mode()>(memory.isInitialized());
         details::foreachTupleId([&]<typename T, size_t shift>(T const& pattern, std::integral_constant<size_t, shift>) {
@@ -49,26 +53,29 @@ public:
                 return;
             }
 
-            auto currentPos = info.pos;
+            CharIt currentPos;
             if constexpr (info.dynamicLocated) {
-                currentPos = pos;
+                currentPos = it;
             } else {
+                currentPos = begin + info.pos;
                 if constexpr (getPreviousInfo<shift>().needCall) {
                     if (needInit) {
-                        cfg.memset(memory.data() + pos, cfg.neutralSymbol(), info.pos - pos);
+                        cfg.memset(it, cfg.neutralSymbol(), info.pos - std::distance(begin, it));
                     }
                 }
             }
 
+            IndexT diff = 0;
             if constexpr (info.needCall) {
                 if constexpr (info.varInd != -1) {
-                    pos = pattern.generate(memory, currentPos, cfg, std::get<info.varInd>(argsTuple));
+                    diff = pattern.generate(currentPos, end, cfg, std::get<info.varInd>(argsTuple));
                 } else {
-                    pos = pattern.generate(memory, currentPos, cfg);
+                    diff = pattern.generate(currentPos, end, cfg);
                 }
-                hasError = pos == ERROR_INDEX;
+                hasError = diff == ERROR_INDEX;
+                it = currentPos + diff;
             } else {
-                pos = info.pos + info.size;
+                it = begin + info.pos + info.size;
             }
         }, m_pattern);
 
@@ -76,7 +83,7 @@ public:
         if (hasError) [[unlikely]] {
             return std::string_view{};
         } else {
-            return std::string_view{memory.data(), pos};
+            return std::string_view{begin, it};
         }
     }
 
@@ -89,7 +96,11 @@ public:
 
         auto argsTuple = std::forward_as_tuple(args...);
         bool hasError = false;
-        IndexT pos = 0;
+
+        auto const begin = memory.begin();
+        auto const end = memory.end();
+        CharIt it = begin;
+        // `it` is always `currentPos` for dynamic located
 
         details::foreachTupleId([&]<typename T, size_t shift>(T const& pattern, std::integral_constant<size_t, shift>) {
             constexpr details::PatternInfo info = infoList[shift];
@@ -97,23 +108,25 @@ public:
                 return;
             }
 
+            IndexT diff = 0;
             if constexpr (info.needCall) {
                 if constexpr (info.varInd != -1) {
-                    pos = pattern.generate(memory, pos, cfg, std::get<info.varInd>(argsTuple));
+                    diff = pattern.generate(it, end, cfg, std::get<info.varInd>(argsTuple));
                 } else {
-                    pos = pattern.generate(memory, pos, cfg);
+                    diff = pattern.generate(it, end, cfg);
                 }
-                hasError = pos == ERROR_INDEX;
+                hasError = diff == ERROR_INDEX;
+                it += diff;
             } else {
-                pattern.initMemory(memory, pos, cfg);
-                pos += info.size;
+                pattern.initMemory(it, end, cfg);
+                it += info.size;
             }
         }, m_pattern);
 
         if (hasError) [[unlikely]] {
             return std::string_view{};
         } else {
-            return std::string_view{memory.data(), pos};
+            return std::string_view{begin, it};
         }
     }
 private:

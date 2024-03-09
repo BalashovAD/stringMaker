@@ -1,8 +1,36 @@
 #pragma once
 
+#include <typeinfo>
+#include <type_traits>
+#include <memory>
+
+#ifdef __GNUC__
+#include <cxxabi.h>
+#endif
+
 #include <gtest/gtest.h>
 
 #include "../include/strMaker/full.hpp"
+
+
+inline std::string demangle(const char* name) {
+#ifdef __GNUC__
+    int status = -1;
+    std::unique_ptr<char, void(*)(void*)> res{
+            abi::__cxa_demangle(name, nullptr, nullptr, &status),
+            std::free
+    };
+    return (status == 0) ? res.get() : name;
+#else
+    return name;
+#endif
+}
+
+template <typename T>
+void printType() {
+    std::cout << demangle(typeid(T).name()) << std::endl;
+}
+
 
 using namespace testing;
 using namespace mkr;

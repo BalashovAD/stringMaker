@@ -5,6 +5,7 @@
 #include "../utils/numberHelper.hpp"
 
 #include <charconv>
+#include <concepts>
 
 namespace mkr {
 
@@ -15,20 +16,20 @@ public:
     static constexpr bool needVariable = true;
     static constexpr IndexT maxSize = maxSizeSuggestion == 0 ? details::maxNumberSize<Number>() : maxSizeSuggestion;
 
-    template <IndexT Size, IsConfig Config>
-    void initMemory(Memory<Size>& mem, IndexT pos, Config const& cfg) const noexcept {
-        details::emptyInitMemory<maxSize>(mem, pos, cfg);
+    template <IsConfig Config>
+    void initMemory(CharIt mem, CharEnd end, Config const& cfg) const noexcept {
+        details::emptyInitMemory<maxSize>(mem, end, cfg);
     }
 
-    template <IndexT memSize, IsConfig Config>
-    IndexT generate(Memory<memSize>& mem, IndexT pos, Config const& cfg, Number n) const noexcept {
+    template <IsConfig Config>
+    IndexT generate(CharIt mem, CharEnd end, Config const& cfg, Number n) const noexcept {
 
-        auto result = std::to_chars(mem.data() + pos, mem.data() + pos + maxSize, n);
+        auto result = std::to_chars(mem, mem + maxSize, n);
         if (result.ec != std::errc{}) [[unlikely]] {
             cfg.errorEvent();
             return ERROR_INDEX;
         }
-        return result.ptr - mem.data();
+        return result.ptr - mem;
     }
 };
 

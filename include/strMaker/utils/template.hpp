@@ -8,6 +8,24 @@
 
 namespace mkr::details {
 
+template<class... Ts>
+struct overloaded : Ts... { using Ts::operator()...; };
+
+template<class... Ts>
+overloaded(Ts...) -> overloaded<Ts...>;
+
+template<typename T, template<typename...> typename Tmpl>
+concept is_template = decltype(overloaded{
+        []<typename ...U>(const Tmpl<U...> &) { return std::true_type{}; },
+        [](const auto &) { return std::false_type{}; },
+}(std::declval<T>()))::value;
+
+template<typename T, template<auto...> typename Tmpl>
+concept is_value_template = decltype(overloaded{
+        []<auto ...U>(const Tmpl<U...> &) { return std::true_type{}; },
+        [](const auto &) { return std::false_type{}; },
+}(std::declval<T>()))::value;
+
 namespace helper {
 
 #define HAS_STATIC_VAR(VarName, VarType) \

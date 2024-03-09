@@ -11,9 +11,9 @@ public:
     static constexpr bool permanent = true;
     static constexpr IndexT maxSize = str.size();
 
-    template <size_t Size, typename Config>
-    void initMemory(Memory<Size>& mem, IndexT pos, Config const& cfg) const noexcept {
-        cfg.fill(mem.data() + pos, str);
+    template <typename Config>
+    void initMemory(CharIt mem, CharEnd end, Config const& cfg) const noexcept {
+        cfg.fill(mem, str);
     }
 };
 

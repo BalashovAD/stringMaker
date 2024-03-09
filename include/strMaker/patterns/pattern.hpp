@@ -5,16 +5,19 @@
 
 namespace mkr {
 
-
 template <typename T>
-concept IsPattern = true;
+concept IsPattern = requires {
+    {details::getSize<T>()} -> std::convertible_to<size_t>;
+    {details::isPermanent<T>()} -> std::convertible_to<bool>;
+    {details::checkNeedVariable<T>()} -> std::convertible_to<bool>;
+};
 
 
 namespace details {
 
-template <IndexT size, IndexT maxSize, IsConfig Cfg>
-void emptyInitMemory(Memory<maxSize>& memory, IndexT pos, Cfg const& cfg) noexcept {
-    cfg.fill(memory.data() + pos, repeatStr<size>(cfg.neutralSymbol()));
+template <IndexT size, IsConfig Cfg>
+void emptyInitMemory(CharIt mem, CharEnd end, Cfg const& cfg) noexcept {
+    cfg.memset(mem, cfg.neutralSymbol(), size);
 }
 
 }

@@ -14,24 +14,26 @@ public:
     static constexpr auto permanent = details::isPermanent<Pattern>();
     static constexpr auto needVariable = details::checkNeedVariable<Pattern>();
 
-    template <size_t Size, IsConfig Config>
-    void initMemory(Memory<Size>& mem, IndexT pos, Config const& cfg) const noexcept {
-        mem[pos] = '"';
-        Pattern::initMemory(mem, pos + 1, cfg);
-        mem[pos + internalMaxSize + 1] = quote;
+    template <IsConfig Config>
+    void initMemory(CharIt mem, CharEnd end, Config const& cfg) const noexcept {
+        assert(end - mem >= maxSize);
+        mem[0] = quote;
+        Pattern::initMemory(mem + 1, end, cfg);
+        mem[internalMaxSize + 1] = quote;
     }
 
-    template <IndexT memSize, IsConfig Config, typename Arg>
-    IndexT generate(Memory<memSize>& mem, IndexT pos, Config const& cfg, Arg&& arg) const {
-        mem[pos] = quote;
-        auto newPos = Pattern::generate(mem, pos + 1, cfg, std::forward<Arg>(arg));
+    template <IsConfig Config, typename Arg>
+    IndexT generate(CharIt mem, CharEnd end, Config const& cfg, Arg&& arg) const {
+        assert(end - mem >= maxSize);
+        mem[0] = quote;
+        auto diff = Pattern::generate(mem + 1, end, cfg, std::forward<Arg>(arg));
 
-        if (newPos == ERROR_INDEX) [[unlikely]] {
+        if (diff == ERROR_INDEX) [[unlikely]] {
             return ERROR_INDEX;
         }
 
-        mem[newPos] = quote;
-        return newPos + 1;
+        mem[diff + 1] = quote;
+        return diff + 2;
     }
 };
 

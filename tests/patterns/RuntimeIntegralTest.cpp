@@ -11,3 +11,18 @@ TEST(Common, Integer) {
     EXPECT_EQ(maker.generate(std::numeric_limits<int>::min()), "start_*-2147483648*_end");
 }
 
+
+TEST(Common, QuotedBorder1) {
+    auto maker = Maker<Aggregator<StaticStr<"start_"_str>, QuotedStr<RuntimeIntegral<int, 1>, '@'>, StaticStr<"_end"_str>>, LocalStorage, DefaultConfig>();
+    EXPECT_EQ(maker.generate(5), "start_@5@_end");
+    EXPECT_EQ(maker.generate(10), "");
+}
+
+
+TEST(Common, QuotedBorder2) {
+    auto maker = Maker<Aggregator<StaticStr<"start_"_str>, QuotedStr<RuntimeIntegral<int, 2>, '@'>, StaticStr<"_end"_str>>, LocalStorage, DefaultConfig>();
+    EXPECT_EQ(maker.generate(5), "start_@5@ _end");
+    EXPECT_EQ(maker.generate(10), "start_@10@_end");
+    EXPECT_EQ(maker.generate(105), "");
+}
+

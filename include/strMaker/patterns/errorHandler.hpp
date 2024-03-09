@@ -14,38 +14,38 @@ public:
     static constexpr bool needVariable = details::checkNeedVariable<Try>() || details::checkNeedVariable<Try>();
     static constexpr IndexT maxSize = std::max(details::getSize<Try>(), details::getSize<Catch>());
 
-    template <size_t Size, IsConfig Config>
-    void initMemory(Memory<Size>& mem, IndexT pos, Config const& cfg) const noexcept {
-        Try::initMemory(mem, pos, cfg);
+    template <IsConfig Config>
+    void initMemory(CharIt mem, CharEnd end, Config const& cfg) const noexcept {
+        Try::initMemory(mem, end, cfg);
     }
 
-    template <IndexT memSize, IsConfig Config, typename Arg>
+    template <IsConfig Config, typename Arg>
         requires (needVariable)
-    IndexT generate(Memory<memSize>& mem, IndexT pos, Config const& cfg, Arg&& arg) const {
+    IndexT generate(CharIt mem, CharEnd end, Config const& cfg, Arg&& arg) const {
 
-        auto newPos = Try::generate(mem, pos, cfg, arg);
+        auto newPos = Try::generate(mem, end, cfg, arg);
         if (newPos != ERROR_INDEX) {
             return newPos;
         } else {
             if constexpr (details::checkNeedVariable<Catch>()) {
-                return Catch::generate(mem, pos, cfg, arg);
+                return Catch::generate(mem, end, cfg, arg);
             } else {
-                Catch::initMemory(mem, pos, cfg);
-                return pos + details::getSize<Catch>();
+                Catch::initMemory(mem, end, cfg);
+                return details::getSize<Catch>();
             }
         }
     }
 
-    template <IndexT memSize, IsConfig Config, typename Arg>
+    template <IsConfig Config, typename Arg>
         requires (!needVariable)
-    IndexT generate(Memory<memSize>& mem, IndexT pos, Config const& cfg) const {
+    IndexT generate(CharIt mem, CharEnd end, Config const& cfg) const {
 
-        auto newPos = Try::generate(mem, pos, cfg);
+        auto newPos = Try::generate(mem, end, cfg);
         if (newPos != ERROR_INDEX) {
             return newPos;
         } else {
-            Catch::initMemory(mem, pos, cfg);
-            return pos + details::getSize<Catch>();
+            Catch::initMemory(mem, end, cfg);
+            return details::getSize<Catch>();
         }
     }
 };

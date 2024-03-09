@@ -43,22 +43,22 @@ public:
     static constexpr bool needVariable = true;
     static constexpr IndexT maxSize = maxSizeSuggestion == 0 ? details::customMaxSize<T>() : maxSizeSuggestion;
 
-    template <size_t Size, IsConfig Config>
-    void initMemory(Memory<Size>& mem, IndexT pos, Config const& cfg) const noexcept {
-        details::emptyInitMemory<maxSize>(mem, pos, cfg);
+    template <IsConfig Config>
+    void initMemory(CharIt mem, CharEnd end, Config const& cfg) const noexcept {
+        details::emptyInitMemory<maxSize>(mem, end, cfg);
     }
 
-    template <IndexT memSize, IsConfig Config, typename Arg>
-    IndexT generate(Memory<memSize>& mem, IndexT pos, Config const& cfg, Arg&& arg) const {
+    template <IsConfig Config, typename Arg>
+    IndexT generate(CharIt mem, CharEnd end, Config const& cfg, Arg&& arg) const {
 
         static_assert(details::explicitly_convertible_to<Arg, T>);
 
-        auto* ptr = mkr_generate(mem.data() + pos, mem.data() + pos + maxSize, cfg, static_cast<T>(arg));
+        auto* ptr = mkr_generate(mem, mem + maxSize, cfg, static_cast<T>(arg));
         if (ptr == nullptr) [[unlikely]] {
             cfg.errorEvent();
             return ERROR_INDEX;
         } else {
-            return ptr - mem.data();
+            return ptr - mem;
         }
     }
 };

@@ -31,14 +31,16 @@ template<std::size_t N = 0>
 struct ConstexprString {
     std::array<char, N + 1> m_str;
 
-    constexpr explicit ConstexprString(char const(&s)[N + 1]) noexcept {
+    template<std::size_t M>
+    constexpr explicit ConstexprString(char const(&s)[M]) noexcept {
+        static_assert(M >= N);
         for (std::size_t i = 0; i <= N; ++i) {
             m_str[i] = s[i];
         }
     }
 
     constexpr explicit ConstexprString(std::array<char, N + 1> arr) noexcept
-            : m_str(arr) {
+        : m_str(arr) {
     }
 
     constexpr explicit ConstexprString(details::MakeArray<N + 1> arr) noexcept{
@@ -49,7 +51,7 @@ struct ConstexprString {
 
 
     static constexpr ConstexprString<1> fromChar(char c) noexcept {
-        return ConstexprString<1>({c});
+        return ConstexprString<1>(std::array<char, 2>({c, '0'}));
     }
 
     template <std::size_t Q>
@@ -133,20 +135,51 @@ struct ConstexprString {
     }
 
 
-    template <size_t M>
-    constexpr ConstexprString<std::min(M, N)> substr() const noexcept {
-        constexpr auto T = std::min(M, N);
+    template <size_t START, size_t SIZE>
+        requires (START + SIZE <= N)
+    consteval auto substr() const noexcept {
+        constexpr auto T = SIZE;
         std::array<char, T + 1> out{};
         for (auto i = 0; i != T; ++i) {
-            out[i] = operator[](i);
+            out[i] = operator[](START + i);
         }
+        out[T] = '\0';
         return ConstexprString<T>(out);
+    }
+
+
+    template <size_t START> requires(START <= N)
+    consteval ConstexprString<N - START> substr() const noexcept {
+        return substr<START, N - START>();
     }
 
     template <size_t M>
     requires(M <= N)
     constexpr bool startsFrom(ConstexprString<M> const& prefix) const noexcept {
         return substr<M>() == prefix;
+    }
+
+    template <size_t M>
+        requires (M > 0)
+    consteval size_t find(ConstexprString<M> ss) const noexcept {
+        if constexpr (N < M) {
+            return std::string::npos;
+        } else {
+            auto it = m_str.begin();
+            auto const end = m_str.end();
+            while (it != end) {
+                if (*it == *ss.m_str.begin()) {
+                    auto i = 0u;
+                    while (i != M && *(it + i) == ss[i])
+                        ++i;
+                    if (i == M) {
+                        return it - m_str.begin();
+                    }
+                }
+                ++it;
+            }
+            return std::string::npos;
+        }
     }
 };
 

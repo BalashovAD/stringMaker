@@ -20,7 +20,6 @@ TEST(DynamicConfig, RuntimeRuntimeAtTheEnd) {
     EXPECT_EQ(maker.generate("@@@@@", "$$$$$"), "start_@@@@@$$$$$");
 }
 
-
 TEST(DynamicConfig, FirstRuntimeRuntimeAtTheEnd) {
     auto maker = Maker<Aggregator<RuntimeStr<5>, RuntimeStr<5>>, LocalStorage, Cfg>();
     EXPECT_EQ(maker.generate("@@@", "$$$"), "@@@$$$");

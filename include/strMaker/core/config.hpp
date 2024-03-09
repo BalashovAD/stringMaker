@@ -12,10 +12,10 @@
 namespace mkr {
 
 enum class AggregatorMode {
-    DEFAULT,
-    PRE_INIT,
-    PRE_INIT_ONLY,
-    DYNAMIC
+    DEFAULT = 0,
+    PRE_INIT = 1,
+    PRE_INIT_ONLY = 2,
+    DYNAMIC = 3,
 };
 
 template <char neutral = ' ', char error = '~', AggregatorMode modeValue = AggregatorMode::DEFAULT>
@@ -38,20 +38,9 @@ struct Config {
 
     }
 
-
     template <size_t N>
-    void fill(char* ptr, ConstexprString<N> const& str) const noexcept {
-        if constexpr (N < 8) {
-            if constexpr (N > 0) ptr[0] = str[0];
-            if constexpr (N > 1) ptr[1] = str[1];
-            if constexpr (N > 2) ptr[2] = str[2];
-            if constexpr (N > 3) ptr[3] = str[3];
-            if constexpr (N > 4) ptr[4] = str[4];
-            if constexpr (N > 5) ptr[5] = str[5];
-            if constexpr (N > 6) ptr[6] = str[6];
-        } else {
-            memcpy(ptr, str.c_str(), N);
-        }
+    void fill(char* __restrict__ ptr, ConstexprString<N> const& str) const noexcept {
+        memcpy(ptr, str.c_str(), N);
     }
 
     void memset(char* ptr, char c, size_t size) const {
@@ -70,6 +59,7 @@ concept IsConfig = requires(T a, char* ptr, const char* const src, size_t size) 
     { a.errorSymbol() } -> std::same_as<char>;
     { a.mode() } -> std::same_as<AggregatorMode>;
     { a.errorEvent() };
+    { a.fill(ptr, ConstexprString<>::fromChar('a')) };
     { a.memset(ptr, 'a', size) };
     { a.memcpy(ptr, src, size) };
 };
@@ -82,12 +72,6 @@ struct DebugConfig : public Config<neutral, error, mode> {
     }
 };
 
-template <char neutral = ' ', char error = '~', AggregatorMode mode = AggregatorMode::DEFAULT>
-struct FastConfig : public Config<neutral, error, mode> {
-    void memset(char* ptr, char c, size_t size) const {
-        ::memset(ptr, c, details::roundUpTo8(size));
-    }
-};
 
 using DefaultConfig = Config<>;
 using DynamicConfig = Config<' ', '~', AggregatorMode::DYNAMIC>;

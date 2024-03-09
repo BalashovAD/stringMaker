@@ -24,6 +24,8 @@ private:
 };
 
 using IndexT = size_t;
+using CharIt = char*;
+using CharEnd = char const*const;
 
 static constexpr IndexT ERROR_INDEX = ~0;
 

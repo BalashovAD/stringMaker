@@ -17,7 +17,3 @@ add_executable(bench ${BENCHMARK_SOURCES} ${LIB_SOURCES})
 target_include_directories(bench PRIVATE
         ${BENCHMARK_DIR}/include)
 target_link_libraries(bench ${BENCHMARK_LIBRARIES})
-
-if(${ENABLE_HUGEPAGES})
-    target_link_options(bench PRIVATE "-B/hugetlbfs")
-endif ()

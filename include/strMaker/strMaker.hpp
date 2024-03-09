@@ -26,6 +26,7 @@ public:
     void init() {
         for (auto& memory : this->allMemory()) {
             m_pattern.initMemory(memory, config());
+            memory.setInitialized(true);
         }
     }
 

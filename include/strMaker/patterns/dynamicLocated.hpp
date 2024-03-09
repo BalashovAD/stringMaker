@@ -14,32 +14,32 @@ public:
     static constexpr bool dynamicLocated = true;
     static constexpr IndexT maxSize = details::getSize<T>();
 
-    template <IndexT Size, IsConfig Config>
-    void initMemory(Memory<Size>& mem, IndexT pos, Config const& cfg) const noexcept {
-        details::emptyInitMemory<maxSize>(mem, pos, cfg);
+    template <IsConfig Config>
+    void initMemory(CharIt mem, CharEnd end, Config const& cfg) const noexcept {
+        details::emptyInitMemory<maxSize>(mem, end, cfg);
     }
 
-    template <IndexT memSize, IsConfig Config, typename Arg>
+    template <IsConfig Config, typename Arg>
         requires(needVariable)
-    IndexT generate(Memory<memSize>& mem, IndexT pos, Config const& cfg, Arg&& n) const {
+    IndexT generate(CharIt mem, CharEnd end, Config const& cfg, Arg&& n) const {
 
         if constexpr (details::isPermanent<T>()) {
-            T::initMemory(mem, pos, cfg);
-            return pos + maxSize;
+            T::initMemory(mem, end, cfg);
+            return maxSize;
         } else {
-            return T::generate(mem, pos, cfg, n);
+            return T::generate(mem, end, cfg, n);
         }
     }
 
-    template <IndexT memSize, IsConfig Config>
+    template <IsConfig Config>
         requires(!needVariable)
-    IndexT generate(Memory<memSize>& mem, IndexT pos, Config const& cfg) const noexcept {
+    IndexT generate(CharIt mem, CharEnd end, Config const& cfg) const noexcept {
 
         if constexpr (details::isPermanent<T>()) {
-            T::initMemory(mem, pos, cfg);
-            return pos + maxSize;
+            T::initMemory(mem, end, cfg);
+            return maxSize;
         } else {
-            return T::generate(mem, pos, cfg);
+            return T::generate(mem, end, cfg);
         }
     }
 };

@@ -18,9 +18,9 @@ public:
 
     using Pattern::initMemory;
 
-    template <IndexT memSize, IsConfig Config, typename Arg>
-    IndexT generate(Memory<memSize>& mem, IndexT pos, Config const& cfg, Arg&& arg) const {
-        return Pattern::generate(mem, pos, cfg, f(arg));
+    template <IsConfig Config, typename Arg>
+    IndexT generate(CharIt mem, CharEnd end, Config const& cfg, Arg&& arg) const {
+        return Pattern::generate(mem, end, cfg, f(arg));
     }
 };
 

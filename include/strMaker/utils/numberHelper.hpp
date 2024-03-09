@@ -22,4 +22,11 @@ constexpr inline unsigned roundUpTo8(unsigned num) {
     return (num + 7) & ~7u;
 }
 
+constexpr unsigned smallestPowOf2GreaterThanN(unsigned n) {
+    unsigned result = 1;
+    while (result <= n) {
+        result <<= 1;
+    }
+    return result;
+}
 }

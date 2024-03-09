@@ -44,3 +44,5 @@ BENCHMARK_CAPTURE(BM_DynamicLocatedOpt, Name ## FullRingPreInitOnly, Maker<Aggr,
 
 BENCH_INIT(Etalon, AggrLocatedEtalon);
 BENCH_INIT(LongTail, AggrLongTail);
+
+#undef BENCH_INIT

@@ -2,6 +2,8 @@
 
 #include <string_view>
 
+#include "../utils/numberHelper.hpp"
+
 namespace mkr {
 
 namespace details {
@@ -70,5 +72,45 @@ public:
 private:
     Memory<maxSize> m_memory;
 };
+
+namespace details {
+
+template <size_t maxSizeParam>
+        requires (maxSizeParam > 0)
+class LocalStorageAlign {
+public:
+    static constexpr IndexT maxSize = maxSizeParam;
+
+    constexpr auto allMemory() noexcept {
+        return details::SingleItemIterable{m_memory};
+    }
+
+    Memory<maxSize>& getMemory() noexcept {
+        return m_memory;
+    }
+private:
+    alignas(16) Memory<maxSize> m_memory;
+};
+
+template <size_t maxSizeParam>
+    requires (maxSizeParam > 0)
+class LocalStorageUnaligned {
+public:
+    static constexpr IndexT maxSize = maxSizeParam;
+
+    constexpr auto allMemory() noexcept {
+        return details::SingleItemIterable{m_memory};
+    }
+
+    Memory<maxSize>& getMemory() noexcept {
+        return m_memory;
+    }
+private:
+    Memory<maxSize> m_memory;
+};
+
+}
+
+
 
 }
