@@ -49,6 +49,7 @@ public:
         const bool needInit = needPreInitMemory<Cfg::mode()>(memory.isInitialized());
         details::foreachTupleId([&]<typename T, size_t shift>(T const& pattern, std::integral_constant<size_t, shift>) {
             constexpr details::PatternInfo info = infoList[shift];
+
             if (hasError) [[unlikely]] {
                 return;
             }
@@ -73,6 +74,9 @@ public:
                     diff = pattern.generate(currentPos, end, cfg);
                 }
                 hasError = diff == ERROR_INDEX;
+                if (hasError) [[unlikely]] {
+                    return;
+                }
                 it = currentPos + diff;
             } else {
                 it = begin + info.pos + info.size;
@@ -104,6 +108,7 @@ public:
 
         details::foreachTupleId([&]<typename T, size_t shift>(T const& pattern, std::integral_constant<size_t, shift>) {
             constexpr details::PatternInfo info = infoList[shift];
+
             if (hasError) [[unlikely]] {
                 return;
             }
@@ -116,6 +121,9 @@ public:
                     diff = pattern.generate(it, end, cfg);
                 }
                 hasError = diff == ERROR_INDEX;
+                if (hasError) [[unlikely]] {
+                    return;
+                }
                 it += diff;
             } else {
                 pattern.initMemory(it, end, cfg);

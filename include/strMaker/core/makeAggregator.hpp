@@ -29,7 +29,7 @@ consteval auto split() {
 }
 
 template <typename Skip, typename Arg, typename ...Args>
-consteval auto optimizer1(Arg const&, Args const&... args) {
+consteval auto optimizer1(Arg, Args... args) {
     auto const next = ([&]() {
         if constexpr (sizeof...(Args) == 0) {
             return std::tuple();
@@ -38,7 +38,7 @@ consteval auto optimizer1(Arg const&, Args const&... args) {
         }
     })();
 
-    if constexpr (Skip{}.template operator()<Arg>()) {
+    if constexpr (Skip::template check<Arg>()) {
         return next;
     } else {
         return std::tuple_cat(std::make_tuple<Arg>({}), next);
@@ -51,7 +51,7 @@ consteval auto optimizer2(Arg1 const&, Arg2 const&, Args const&...args) {
         if constexpr (sizeof...(Args) >= 2) {
             return optimizer2(args...);
         } else if constexpr (sizeof...(Args) == 1) {
-            return std::declval<std::tuple<details::GetIthType<0, Args...>>>();
+            return std::tuple<details::GetIthType<0, Args...>>();
         } else {
             return std::tuple();
         }
@@ -67,7 +67,7 @@ consteval auto optimizer2(Arg1 const&, Arg2 const&, Args const&...args) {
 
 struct StaticStrZeroSize {
     template <class T>
-    consteval bool operator()() const {
+    static consteval bool check() {
         return std::is_same_v<StaticStr<""_str>, T>;
     }
 };
@@ -76,20 +76,15 @@ struct StaticStrZeroSize {
 template <typename ...Args>
 struct Combine : Args... {
     template <class T>
-    constexpr bool operator()() const {
-        return (false || ... || get<Args>().template operator()<T>());
-    }
-private:
-    template<class Parent>
-    constexpr Parent const& get() const {
-        return static_cast<Parent const&>(*this);
+    static constexpr bool check() {
+        return (false || ... || Args::template check<T>());
     }
 };
 
 
 template <typename Arg> requires(details::is_template<Arg, std::tuple> && std::tuple_size_v<Arg> >= 1)
-using Optimize1 = decltype(std::apply([](auto&& ...args) {
-    return optimizer1<Combine<StaticStrZeroSize>>(args...);
+using Optimize1 = decltype(std::apply([](auto ...args) {
+    return optimizer1<StaticStrZeroSize>(args...);
 }, std::declval<Arg>()));
 
 
@@ -139,8 +134,5 @@ using Unoptimized = AggWrapper<typename MakeAggregatorImpl<str, Args...>::Unopti
 
 template <auto str, IsPattern ...Args>
 using MakeAggregator = details::MakeAggregatorImpl<str, Args...>::type;
-
-
-
 
 } // mkr

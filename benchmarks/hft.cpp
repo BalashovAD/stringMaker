@@ -5,7 +5,10 @@
 template <typename Maker>
 static void BM_BNNMaker(benchmark::State& state, Maker maker) {
 
-    auto now = std::chrono::system_clock::now().time_since_epoch();
+    auto now = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch());
+
+    testMaker(state, maker, "BTCUSDT", "BUY", "LIMIT", 1.568, 44200.5, "cuniquestring", now.count(), "IOC");
+
     for (auto _ : state) {
         runBenchBatch(state, maker, "BTCUSDT", "BUY", "LIMIT", 1.568, 44200.5, "cuniquestring", now.count(), "IOC");
     }
@@ -24,7 +27,10 @@ static void BM_BNNFixedPatternMaker(benchmark::State& state) {
             DynamicLocated<StaticStr<"&newOrderRespType=RESULT&timeInForce="_str>>, DynamicLocated<RuntimeStr<3>>>;
     auto maker = Maker<Aggr>();
 
-    auto now = std::chrono::system_clock::now().time_since_epoch();
+    auto now = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch());
+
+    testMaker(state, maker, "BTCUSDT", "BUY", "LIMIT", 1.568, 44200.5, "cuniquestring", now.count(), "IOC");
+
     for (auto _ : state) {
         runBenchBatch(state, maker, "BTCUSDT", "BUY", "LIMIT", 1.568, 44200.5, "cuniquestring", now.count(), "IOC");
     }
@@ -35,7 +41,7 @@ static void BM_BNNFixedPatternMaker(benchmark::State& state) {
 static void BM_BNNFormat(benchmark::State& state) {
 
     std::string_view sv;
-    auto now = std::chrono::system_clock::now().time_since_epoch();
+    auto now = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch());
     for (auto _ : state) {
         for (auto i = 0; i != TEST_SIZE; ++i) {
             sv = std::format(
@@ -49,6 +55,8 @@ static void BM_BNNFormat(benchmark::State& state) {
 
 template <typename Maker>
 static void BM_OKXMaker(benchmark::State& state, Maker maker) {
+
+    testMaker(state, maker, "USDT", "orderiduniquestr", 1.567, "buy", 44865.2, "BTC-USDT", "limit", "cross");
 
     for (auto _ : state) {
         runBenchBatch(state, maker, "USDT", "orderiduniquestr", 1.567, "buy", 44865.2, "BTC-USDT", "limit", "cross");
@@ -89,7 +97,7 @@ using BNNAggr = Aggregator<StaticStr<"symbol="_str>, RuntimeStr<8>,
         StaticStr<"&timestamp="_str>, RuntimeIntegral<uint64_t, 16>,
         StaticStr<"&newOrderRespType=RESULT&timeInForce="_str>, RuntimeStr<3>>;
 
-BENCHMARK_CAPTURE(BM_BNNMaker, Default, Maker<BNNAggr>());
+BENCHMARK_CAPTURE(BM_BNNMaker, Default, Maker<BNNAggr, LocalStorage, DebugConfig<>>());
 BENCHMARK_CAPTURE(BM_BNNMaker, Dynamic, Maker<BNNAggr, LocalStorage, DynamicConfig>());
 BENCHMARK_CAPTURE(BM_BNNMaker, PreInit, Maker<BNNAggr, LocalStorage, PreInitConfig>());
 
@@ -99,7 +107,7 @@ BENCHMARK_CAPTURE(BM_BNNMaker, NoCachePreInit, Maker<BNNAggr, RingStorage::type,
 BENCHMARK_CAPTURE(BM_BNNMaker, NoCachePreInitOnly, Maker<BNNAggr, RingStorage::type, PreInitOnlyConfig>());
 
 BENCHMARK(BM_BNNFixedPatternMaker);
-BENCHMARK(BM_BNNFormat);
+BENCHMARK(BM_BNNFormat)->Name("BM_BNN/Format");
 
 
 BENCHMARK_CAPTURE(BM_OKXMaker, Default, Maker<OKXAggr>());
@@ -111,4 +119,4 @@ BENCHMARK_CAPTURE(BM_OKXMaker, NoCacheDynamic, Maker<OKXAggr, RingStorage::type,
 BENCHMARK_CAPTURE(BM_OKXMaker, NoCachePreInit, Maker<OKXAggr, RingStorage::type, PreInitConfig>());
 BENCHMARK_CAPTURE(BM_OKXMaker, NoCachePreInitOnly, Maker<OKXAggr, RingStorage::type, PreInitOnlyConfig>());
 
-BENCHMARK(BM_OKXFormat);
+BENCHMARK(BM_OKXFormat)->Name("BM_OKX/Format");

@@ -3,6 +3,8 @@
 
 template <typename Maker>
 static void BM_AlignMemory(benchmark::State& state, Maker maker) {
+    testMaker(state, maker, "test", 152, "longlonglongstring", -999, "rwars");
+
     for (auto _ : state) {
         runBenchBatch(state, maker, "test", 152, "longlonglongstring", -999, "rwars");
     }

@@ -4,3 +4,6 @@
 [submodule "extern/benchmark"]
 	path = extern/benchmark
 	url = https://github.com/google/benchmark.git
+[submodule "extern/amalgamate"]
+	path = extern/amalgamate
+	url = https://github.com/BalashovAD/amalgamate.git

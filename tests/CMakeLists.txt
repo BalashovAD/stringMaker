@@ -12,6 +12,9 @@ file(GLOB_RECURSE TEST_SOURCES
 
 add_executable(unit-tests ${TEST_SOURCES} ${LIB_SOURCES})
 target_link_libraries(unit-tests PRIVATE gtest gtest_main)
+
+#target_include_directories(unit-tests PRIVATE ${CMAKE_SOURCE_DIR}/single_include)
+
 target_include_directories(unit-tests PRIVATE
         ${GTEST_DIR}/googletest/include)
 

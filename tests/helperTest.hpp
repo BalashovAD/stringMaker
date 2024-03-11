@@ -10,7 +10,7 @@
 
 #include <gtest/gtest.h>
 
-#include "../include/strMaker/full.hpp"
+#include <strMaker/all.hpp>
 
 
 inline std::string demangle(const char* name) {

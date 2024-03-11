@@ -16,7 +16,7 @@ public:
 
     template <IsConfig Config>
     void initMemory(CharIt mem, CharEnd end, Config const& cfg) const noexcept {
-        assert(end - mem >= maxSize);
+
         mem[0] = quote;
         Pattern::initMemory(mem + 1, end, cfg);
         mem[internalMaxSize + 1] = quote;
@@ -24,7 +24,7 @@ public:
 
     template <IsConfig Config, typename Arg>
     IndexT generate(CharIt mem, CharEnd end, Config const& cfg, Arg&& arg) const {
-        assert(end - mem >= maxSize);
+
         mem[0] = quote;
         auto diff = Pattern::generate(mem + 1, end, cfg, std::forward<Arg>(arg));
 

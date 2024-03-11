@@ -2,6 +2,8 @@
 
 template <typename Maker>
 static void BM_staticZeroCost(benchmark::State& state, Maker& maker) {
+    testMaker(state, maker, "testTEST", 1234);
+
     for (auto _ : state) {
         runBenchBatch(state, maker, "testTEST", 1234);
     }
@@ -58,6 +60,8 @@ BENCHMARK_CAPTURE(BM_staticZeroCost, misSize, misSize);
 
 template <typename Maker>
 static void BM_Quoted(benchmark::State& state, Maker& maker) {
+    testMaker(state, maker, "test");
+
     for (auto _ : state) {
         runBenchBatch(state, maker, "test");
     }

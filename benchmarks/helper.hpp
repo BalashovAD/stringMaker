@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../include/strMaker/full.hpp"
+#include "../include/strMaker/all.hpp"
 
 #include <benchmark/benchmark.h>
 
@@ -14,17 +14,33 @@ static constexpr int TEST_SIZE = 1000;
 
 template <typename Maker, typename ...Args>
 void runBenchBatch(benchmark::State& state, Maker& maker, Args const& ...args) {
-    std::string_view sv;
-    for (auto i = 0; i != TEST_SIZE; ++i) {
-        sv = maker.generate(args...);
-        benchmark::DoNotOptimize(sv);
-    }
-
     if constexpr (Maker::Config::mode() == AggregatorMode::PRE_INIT_ONLY
                   || Maker::Config::mode() == AggregatorMode::PRE_INIT) {
         state.PauseTiming();
         maker.init();
         state.ResumeTiming();
+    }
+
+    std::string_view sv;
+    for (auto i = 0; i != TEST_SIZE; ++i) {
+        sv = maker.generate(args...);
+        benchmark::DoNotOptimize(sv);
+    }
+}
+
+
+template <typename Maker, typename ...Args>
+void testMaker(benchmark::State& state, Maker& maker, Args const& ...args) {
+
+    std::string_view sv;
+    sv = maker.generate(args...);
+    if (sv.empty()) {
+        state.SkipWithError("Error in maker");
+    }
+
+    if constexpr (Maker::Config::mode() == AggregatorMode::PRE_INIT_ONLY
+                  || Maker::Config::mode() == AggregatorMode::PRE_INIT) {
+        maker.init();
     }
 }
 

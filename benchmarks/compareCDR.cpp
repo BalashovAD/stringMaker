@@ -163,6 +163,7 @@ static inline auto BENCH_CASES = generateCases(TEST_SIZE);
 
 template <typename Maker>
 static void BM_mkrCDR(benchmark::State& state, Maker maker) {
+
     for (auto _ : state) {
         for (auto i = 0; i != TEST_SIZE; ++i) {
             auto const& args = BENCH_CASES[i];
@@ -244,6 +245,8 @@ static void BM_mkrCDR_perfectCDR(benchmark::State& state) {
             addNumber(get<10>(args));
             addStr(get<11>(args));
             addStr(get<12>(args));
+
+            benchmark::DoNotOptimize(buffer);
         }
     }
 

@@ -17,6 +17,11 @@ template <typename Maker>
 static void BM_MakeAggr(benchmark::State& state, Maker& maker) {
     std::array<std::string, 15> ss;
     std::transform(ss.begin(), ss.end(), ss.begin(), [](auto) {return generateRandomString(getRandomNumber(1, 8));});
+
+    testMaker(state, maker,
+            ss[0], ss[1], ss[2], ss[3], ss[4], ss[5], ss[6], ss[7]
+                  , ss[8], ss[9], ss[10], ss[11], ss[12], ss[13], ss[14]);
+
     for (auto _ : state) {
         runBenchBatch(state, maker,
                 ss[0], ss[1], ss[2], ss[3], ss[4], ss[5], ss[6], ss[7]

@@ -3,8 +3,7 @@
 #include "storage/storage.hpp"
 #include "storage/localStorage.hpp"
 #include "core/memory.hpp"
-#include "core/aggregator.hpp"
-#include "patterns/pattern.hpp"
+#include "core/config.hpp"
 
 namespace mkr {
 

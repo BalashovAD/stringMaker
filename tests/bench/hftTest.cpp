@@ -2,7 +2,7 @@
 
 #include <format>
 
-#include "../../include/strMaker/full.hpp"
+#include "../../include/strMaker/all.hpp"
 
 using namespace testing;
 using namespace mkr;
@@ -19,7 +19,13 @@ TEST(BenchHFT, BNN) {
         StaticStr<"&timestamp="_str>, RuntimeIntegral<uint64_t, 16>,
         StaticStr<"&newOrderRespType=RESULT&timeInForce="_str>, RuntimeStr<3>>;
 
+    auto now = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch());
+
     auto maker = Maker<Aggr, LocalStorage, DebugConfig<>>();
+
+    auto sv = maker.generate("BTCUSDT", "BUY", "LIMIT", 1.568, 44200.5, "cuniquestring", now.count(), "IOC");
+    EXPECT_FALSE(sv.empty());
+
 
     EXPECT_EQ(maker.generate("BTCUSDT", "BUY", "LIMIT", 1.568, 44200.5, "cuniquestring", 1703789943256630, "IOC"),
               "symbol=BTCUSDT &side=BUY &type=LIMIT&quantity=1.568             &price=44200.5           &newClientOrderId=cuniquestring    &timestamp=1703789943256630&newOrderRespType=RESULT&timeInForce=IOC");

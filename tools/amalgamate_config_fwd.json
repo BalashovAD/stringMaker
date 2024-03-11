@@ -1,0 +1,8 @@
+{
+    "project": "StrMaker",
+    "target": "single_include/strMaker/fwd.hpp",
+    "sources": [
+        "include/strMaker/fwd.hpp"
+    ],
+    "include_paths": ["include"]
+}
