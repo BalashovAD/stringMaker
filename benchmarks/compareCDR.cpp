@@ -21,7 +21,7 @@ struct details::CustomMaxSize<Source> {
 };
 
 template <IsConfig Cfg>
-inline char* mkr_generate(char* begin, char* end, Cfg const& cfg, Source const& t) {
+inline char* mkr_generate(char* begin, [[maybe_unused]] char* end, [[maybe_unused]] Cfg const& cfg, Source const& t) {
     if (t == Source::IN) {
         begin[0] = 'I';
         begin[1] = 'N';

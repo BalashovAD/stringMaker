@@ -726,10 +726,31 @@ void emptyInitMemory(CharIt mem, [[maybe_unused]] CharEnd end, Cfg const& cfg) n
 }
 
 }
+// #include "../utils/pragmaHelper.hpp"
+
+
+#if defined(_MSC_VER)
+    #define DISABLE_WARNING_PUSH           __pragma(warning( push ))
+    #define DISABLE_WARNING_POP            __pragma(warning( pop ))
+    #define DISABLE_WARNING(warningNumber) __pragma(warning( disable : warningNumber ))
+
+#elif defined(__GNUC__) || defined(__clang__)
+    #define DO_PRAGMA(X) _Pragma(#X)
+    #define DISABLE_WARNING_PUSH           DO_PRAGMA(GCC diagnostic push)
+    #define DISABLE_WARNING_POP            DO_PRAGMA(GCC diagnostic pop)
+    #define DISABLE_WARNING(warningName)   DO_PRAGMA(GCC diagnostic ignored #warningName)
+
+#else
+    #define DISABLE_WARNING_PUSH
+    #define DISABLE_WARNING_POP
+    #define DISABLE_WARNING_UNREFERENCED_FORMAL_PARAMETER
+    #define DISABLE_WARNING_UNREFERENCED_FUNCTION
+#endif
 
 #include <tuple>
 #include <numeric>
 #include <string_view>
+
 
 namespace mkr {
 
@@ -802,7 +823,10 @@ public:
                 }
                 hasError = diff == ERROR_INDEX;
                 // invalid `diff` will be checked at the start of the next arg processing
+                DISABLE_WARNING_PUSH
+                DISABLE_WARNING(-Warray-bounds)
                 it = currentPos + diff;
+                DISABLE_WARNING_POP
             } else {
                 it = begin + info.pos + info.size;
             }
@@ -846,7 +870,11 @@ public:
                     diff = pattern.generate(it, end, cfg);
                 }
                 hasError = diff == ERROR_INDEX;
+                // invalid `diff` will be checked at the start of the next arg processing
+                DISABLE_WARNING_PUSH
+                DISABLE_WARNING(-Warray-bounds)
                 it += diff;
+                DISABLE_WARNING_POP
             } else {
                 pattern.initMemory(it, end, cfg);
                 it += info.size;
