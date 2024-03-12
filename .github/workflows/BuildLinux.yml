@@ -7,7 +7,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         submodules: 'true'
 
@@ -15,7 +15,7 @@ jobs:
       run: ./amalgamate.sh
 
     - name: Verify Changed files
-      uses: tj-actions/verify-changed-files@v14
+      uses: tj-actions/verify-changed-files@v19
       id: verify-amalgamate
       with:
         files: |
