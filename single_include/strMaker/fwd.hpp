@@ -78,7 +78,7 @@ namespace helper {
 template <typename T>\
 concept Has_ ## VarName = requires {     \
     requires std::convertible_to<decltype(T::VarName), VarType>; \
-}
+};
 
 HAS_STATIC_VAR(maxSize, IndexT);
 HAS_STATIC_VAR(mkr_maxSize, IndexT);
@@ -716,7 +716,7 @@ concept IsPattern = requires {
 namespace details {
 
 template <IndexT size, IsConfig Cfg>
-void emptyInitMemory(CharIt mem, CharEnd end, Cfg const& cfg) noexcept {
+void emptyInitMemory(CharIt mem, [[maybe_unused]] CharEnd end, Cfg const& cfg) noexcept {
     cfg.memset(mem, cfg.neutralSymbol(), size);
 }
 
@@ -733,7 +733,7 @@ namespace mkr {
 template <IsPattern ...StrPattern>
 class Aggregator {
     template <size_t shift = 0, typename Fn, typename ...Args>
-    constexpr void foreach(Fn const& f, bool const& hasError, std::tuple<Args...> const& t) {
+    static constexpr void foreach(Fn const& f, bool const& hasError, std::tuple<Args...> const& t) {
         f(std::get<shift>(t), std::integral_constant<size_t, shift>{});
         if constexpr (shift + 1 < sizeof...(Args)) {
             if (!hasError) [[likely]] {
@@ -915,7 +915,7 @@ public:
     static constexpr IndexT maxSize = str.size();
 
     template <typename Config>
-    void initMemory(CharIt mem, CharEnd end, Config const& cfg) const noexcept {
+    void initMemory(CharIt mem, [[maybe_unused]] CharEnd end, Config const& cfg) const noexcept {
         cfg.fill(mem, str);
     }
 };

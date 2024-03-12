@@ -22,7 +22,7 @@ public:
     }
 
     template <IsConfig Config>
-    IndexT generate(CharIt mem, CharEnd end, Config const& cfg, Number n) const noexcept {
+    IndexT generate(CharIt mem, [[maybe_unused]] CharEnd end, Config const& cfg, Number n) const noexcept {
 
         auto result = std::to_chars(mem, mem + maxSize, n);
         if (result.ec != std::errc{}) [[unlikely]] {

@@ -12,8 +12,6 @@ TEST(CompilationTest, WrongArgsNumber) {
 //    maker.generate("test", 5);
 }
 
-
-
 struct MyStruct2 {
     int a;
     std::string s;

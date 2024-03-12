@@ -49,7 +49,7 @@ public:
     }
 
     template <IsConfig Config, typename Arg>
-    IndexT generate(CharIt mem, CharEnd end, Config const& cfg, Arg&& arg) const {
+    IndexT generate(CharIt mem, [[maybe_unused]] CharEnd end, Config const& cfg, Arg&& arg) const {
 
         static_assert(details::explicitly_convertible_to<Arg, T>);
 
