@@ -87,7 +87,7 @@ public:
         return m_memory;
     }
 private:
-    alignas(16) Memory<maxSize> m_memory;
+    alignas(64) Memory<maxSize> m_memory;
 };
 
 template <size_t maxSizeParam>

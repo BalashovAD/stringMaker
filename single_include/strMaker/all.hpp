@@ -343,7 +343,7 @@ public:
         return m_memory;
     }
 private:
-    alignas(16) Memory<maxSize> m_memory;
+    alignas(64) Memory<maxSize> m_memory;
 };
 
 template <size_t maxSizeParam>
@@ -735,6 +735,15 @@ namespace mkr {
 
 template <IsPattern ...StrPattern>
 class Aggregator {
+    template <size_t shift = 0, typename Fn, typename ...Args>
+    constexpr void foreach(Fn const& f, bool const& hasError, std::tuple<Args...> const& t) {
+        f(std::get<shift>(t), std::integral_constant<size_t, shift>{});
+        if constexpr (shift + 1 < sizeof...(Args)) {
+            if (!hasError) [[likely]] {
+                foreach<shift + 1, Fn, Args...>(f, hasError, t);
+            }
+        }
+    }
 public:
     static constexpr IndexT maxSize = details::sumSize<StrPattern...>();
     static constexpr size_t patternSize = sizeof...(StrPattern);
@@ -756,7 +765,7 @@ public:
     }
 
 
-    template <IsConfig Cfg, typename ...Args>
+    template <IsConfig Cfg, typename ...Args> requires(Cfg::mode() != AggregatorMode::DYNAMIC)
     std::string_view generate(Memory<maxSize>& memory, Cfg const& cfg, Args&&...args) {
 
         static_assert(validateArgs<sizeof...(Args)>());
@@ -769,12 +778,8 @@ public:
         bool hasError = false;
 
         const bool needInit = needPreInitMemory<Cfg::mode()>(memory.isInitialized());
-        details::foreachTupleId([&]<typename T, size_t shift>(T const& pattern, std::integral_constant<size_t, shift>) {
+        foreach([&]<typename T, size_t shift>(T const& pattern, std::integral_constant<size_t, shift>) {
             constexpr details::PatternInfo info = infoList[shift];
-
-            if (hasError) [[unlikely]] {
-                return;
-            }
 
             CharIt currentPos;
             if constexpr (info.dynamicLocated) {
@@ -796,14 +801,12 @@ public:
                     diff = pattern.generate(currentPos, end, cfg);
                 }
                 hasError = diff == ERROR_INDEX;
-                if (hasError) [[unlikely]] {
-                    return;
-                }
+                // invalid `diff` will be checked at the start of the next arg processing
                 it = currentPos + diff;
             } else {
                 it = begin + info.pos + info.size;
             }
-        }, m_pattern);
+        }, hasError, m_pattern);
 
         memory.setInitialized(false);
         if (hasError) [[unlikely]] {
@@ -828,7 +831,7 @@ public:
         CharIt it = begin;
         // `it` is always `currentPos` for dynamic located
 
-        details::foreachTupleId([&]<typename T, size_t shift>(T const& pattern, std::integral_constant<size_t, shift>) {
+        foreach([&]<typename T, size_t shift>(T const& pattern, std::integral_constant<size_t, shift>) {
             constexpr details::PatternInfo info = infoList[shift];
 
             if (hasError) [[unlikely]] {
@@ -843,15 +846,12 @@ public:
                     diff = pattern.generate(it, end, cfg);
                 }
                 hasError = diff == ERROR_INDEX;
-                if (hasError) [[unlikely]] {
-                    return;
-                }
                 it += diff;
             } else {
                 pattern.initMemory(it, end, cfg);
                 it += info.size;
             }
-        }, m_pattern);
+        }, hasError, m_pattern);
 
         if (hasError) [[unlikely]] {
             return std::string_view{};
@@ -910,9 +910,10 @@ private:
 
 namespace mkr {
 
-template <ConstexprString str>
+template <ConstexprString strP>
 class StaticStr {
 public:
+    static constexpr auto str = strP;
     static constexpr bool permanent = true;
     static constexpr IndexT maxSize = str.size();
 
@@ -969,22 +970,25 @@ consteval auto optimizer1(Arg, Args... args) {
 }
 
 template <typename Arg1, typename Arg2, typename ...Args>
-consteval auto optimizer2(Arg1 const&, Arg2 const&, Args const&...args) {
-    auto const next = ([&]() {
-        if constexpr (sizeof...(Args) >= 2) {
-            return optimizer2(args...);
-        } else if constexpr (sizeof...(Args) == 1) {
-            return std::tuple<details::GetIthType<0, Args...>>();
-        } else {
-            return std::tuple();
-        }
-    })();
+consteval auto optimizer2(Arg1 const& , Arg2 const& arg2, Args const&...args) {
+
 
     if constexpr (details::is_value_template<Arg1, StaticStr> && details::is_value_template<Arg2, StaticStr>) {
         using NewStr = StaticStr<Arg1::str + Arg2::str>;
-        return std::tuple_cat(std::make_tuple<NewStr>(), next);
+        if constexpr (sizeof...(Args) == 0) {
+            return std::tuple<NewStr>();
+        } else {
+            return optimizer2(NewStr{}, args...);
+        }
     } else {
-        return std::tuple_cat(std::make_tuple<Arg1, Arg2>({}, {}), next);
+        auto const next = ([&]() {
+            if constexpr (sizeof...(Args) >= 1) {
+                return optimizer2(arg2, args...);
+            } else { // (sizeof...(Args) == 0)
+                return std::tuple<Arg2>();
+            }
+        })();
+        return std::tuple_cat(std::tuple<Arg1>(), next);
     }
 }
 
@@ -1011,13 +1015,13 @@ using Optimize1 = decltype(std::apply([](auto ...args) {
 }, std::declval<Arg>()));
 
 
-template <typename Arg> requires(details::is_template<Arg, std::tuple> && std::tuple_size_v<Arg> >= 2)
+template <typename Arg> requires(details::is_template<Arg, std::tuple>)
 struct Optimize2 {
     using type = decltype(std::apply([](auto&& ...args) {
         if constexpr (sizeof...(args) >= 2) {
             return optimizer2(args...);
         } else {
-            return std::declval<details::GetIthType<0, decltype(args)...>>();
+            return std::make_tuple<details::GetIthType<0, decltype(args)...>>({});
         }
     }, std::declval<Arg>()));
 };

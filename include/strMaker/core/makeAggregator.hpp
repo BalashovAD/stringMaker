@@ -46,22 +46,25 @@ consteval auto optimizer1(Arg, Args... args) {
 }
 
 template <typename Arg1, typename Arg2, typename ...Args>
-consteval auto optimizer2(Arg1 const&, Arg2 const&, Args const&...args) {
-    auto const next = ([&]() {
-        if constexpr (sizeof...(Args) >= 2) {
-            return optimizer2(args...);
-        } else if constexpr (sizeof...(Args) == 1) {
-            return std::tuple<details::GetIthType<0, Args...>>();
-        } else {
-            return std::tuple();
-        }
-    })();
+consteval auto optimizer2(Arg1 const& , Arg2 const& arg2, Args const&...args) {
+
 
     if constexpr (details::is_value_template<Arg1, StaticStr> && details::is_value_template<Arg2, StaticStr>) {
         using NewStr = StaticStr<Arg1::str + Arg2::str>;
-        return std::tuple_cat(std::make_tuple<NewStr>(), next);
+        if constexpr (sizeof...(Args) == 0) {
+            return std::tuple<NewStr>();
+        } else {
+            return optimizer2(NewStr{}, args...);
+        }
     } else {
-        return std::tuple_cat(std::make_tuple<Arg1, Arg2>({}, {}), next);
+        auto const next = ([&]() {
+            if constexpr (sizeof...(Args) >= 1) {
+                return optimizer2(arg2, args...);
+            } else { // (sizeof...(Args) == 0)
+                return std::tuple<Arg2>();
+            }
+        })();
+        return std::tuple_cat(std::tuple<Arg1>(), next);
     }
 }
 
@@ -88,13 +91,13 @@ using Optimize1 = decltype(std::apply([](auto ...args) {
 }, std::declval<Arg>()));
 
 
-template <typename Arg> requires(details::is_template<Arg, std::tuple> && std::tuple_size_v<Arg> >= 2)
+template <typename Arg> requires(details::is_template<Arg, std::tuple>)
 struct Optimize2 {
     using type = decltype(std::apply([](auto&& ...args) {
         if constexpr (sizeof...(args) >= 2) {
             return optimizer2(args...);
         } else {
-            return std::declval<details::GetIthType<0, decltype(args)...>>();
+            return std::make_tuple<details::GetIthType<0, decltype(args)...>>({});
         }
     }, std::declval<Arg>()));
 };

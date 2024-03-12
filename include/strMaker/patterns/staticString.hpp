@@ -5,9 +5,10 @@
 
 namespace mkr {
 
-template <ConstexprString str>
+template <ConstexprString strP>
 class StaticStr {
 public:
+    static constexpr auto str = strP;
     static constexpr bool permanent = true;
     static constexpr IndexT maxSize = str.size();
 

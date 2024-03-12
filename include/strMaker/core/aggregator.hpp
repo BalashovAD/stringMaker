@@ -13,6 +13,15 @@ namespace mkr {
 
 template <IsPattern ...StrPattern>
 class Aggregator {
+    template <size_t shift = 0, typename Fn, typename ...Args>
+    constexpr void foreach(Fn const& f, bool const& hasError, std::tuple<Args...> const& t) {
+        f(std::get<shift>(t), std::integral_constant<size_t, shift>{});
+        if constexpr (shift + 1 < sizeof...(Args)) {
+            if (!hasError) [[likely]] {
+                foreach<shift + 1, Fn, Args...>(f, hasError, t);
+            }
+        }
+    }
 public:
     static constexpr IndexT maxSize = details::sumSize<StrPattern...>();
     static constexpr size_t patternSize = sizeof...(StrPattern);
@@ -34,7 +43,7 @@ public:
     }
 
 
-    template <IsConfig Cfg, typename ...Args>
+    template <IsConfig Cfg, typename ...Args> requires(Cfg::mode() != AggregatorMode::DYNAMIC)
     std::string_view generate(Memory<maxSize>& memory, Cfg const& cfg, Args&&...args) {
 
         static_assert(validateArgs<sizeof...(Args)>());
@@ -47,12 +56,8 @@ public:
         bool hasError = false;
 
         const bool needInit = needPreInitMemory<Cfg::mode()>(memory.isInitialized());
-        details::foreachTupleId([&]<typename T, size_t shift>(T const& pattern, std::integral_constant<size_t, shift>) {
+        foreach([&]<typename T, size_t shift>(T const& pattern, std::integral_constant<size_t, shift>) {
             constexpr details::PatternInfo info = infoList[shift];
-
-            if (hasError) [[unlikely]] {
-                return;
-            }
 
             CharIt currentPos;
             if constexpr (info.dynamicLocated) {
@@ -74,14 +79,12 @@ public:
                     diff = pattern.generate(currentPos, end, cfg);
                 }
                 hasError = diff == ERROR_INDEX;
-                if (hasError) [[unlikely]] {
-                    return;
-                }
+                // invalid `diff` will be checked at the start of the next arg processing
                 it = currentPos + diff;
             } else {
                 it = begin + info.pos + info.size;
             }
-        }, m_pattern);
+        }, hasError, m_pattern);
 
         memory.setInitialized(false);
         if (hasError) [[unlikely]] {
@@ -106,7 +109,7 @@ public:
         CharIt it = begin;
         // `it` is always `currentPos` for dynamic located
 
-        details::foreachTupleId([&]<typename T, size_t shift>(T const& pattern, std::integral_constant<size_t, shift>) {
+        foreach([&]<typename T, size_t shift>(T const& pattern, std::integral_constant<size_t, shift>) {
             constexpr details::PatternInfo info = infoList[shift];
 
             if (hasError) [[unlikely]] {
@@ -121,15 +124,12 @@ public:
                     diff = pattern.generate(it, end, cfg);
                 }
                 hasError = diff == ERROR_INDEX;
-                if (hasError) [[unlikely]] {
-                    return;
-                }
                 it += diff;
             } else {
                 pattern.initMemory(it, end, cfg);
                 it += info.size;
             }
-        }, m_pattern);
+        }, hasError, m_pattern);
 
         if (hasError) [[unlikely]] {
             return std::string_view{};

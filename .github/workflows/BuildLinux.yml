@@ -1,0 +1,55 @@
+name: CMake
+
+on: push
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        submodules: 'true'
+
+    - name: Run amalgamate
+      run: ./amalgamate.sh
+
+    - name: Verify Changed files
+      uses: tj-actions/verify-changed-files@v14
+      id: verify-amalgamate
+      with:
+        files: |
+          single_include/strMaker/*.hpp
+
+    - if: steps.verify-amalgamate.outputs.files_changed == 'true'
+      run: |
+        echo '::error:: Single include files were not generated, use amalgamate.sh'
+        exit 1
+
+    - name: Configure CMake Release
+      run: cmake -B ${{github.workspace}}/build_release -DCMAKE_BUILD_TYPE=Release -DCODE_COVERAGE=OFF -DSingleInclude=ON -DEnableHardBenchmark=OFF
+
+    - name: Build
+      run: cmake --build ${{github.workspace}}/build_release --config Release
+
+    - name: Dir
+      working-directory: ${{github.workspace}}/build_release
+      run: ls -la && ls -la benchmarks
+
+    - name: Test
+      working-directory: ${{github.workspace}}/build_release/tests
+      run: ./unit-tests
+
+    - name: Benchmark
+      working-directory: ${{github.workspace}}/build_release/benchmarks
+      run: ./bench
+
+    - name: Configure CMake Debug
+      run: cmake -B ${{github.workspace}}/build_debug -DCMAKE_BUILD_TYPE=Debug -DCODE_COVERAGE=OFF
+
+    - name: Build
+      run: cmake --build ${{github.workspace}}/build_debug --config Debug
+
+    - name: Test
+      working-directory: ${{github.workspace}}/build_debug/tests
+      run: ./unit-tests

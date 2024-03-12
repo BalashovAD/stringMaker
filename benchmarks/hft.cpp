@@ -97,7 +97,7 @@ using BNNAggr = Aggregator<StaticStr<"symbol="_str>, RuntimeStr<8>,
         StaticStr<"&timestamp="_str>, RuntimeIntegral<uint64_t, 16>,
         StaticStr<"&newOrderRespType=RESULT&timeInForce="_str>, RuntimeStr<3>>;
 
-BENCHMARK_CAPTURE(BM_BNNMaker, Default, Maker<BNNAggr, LocalStorage, DebugConfig<>>());
+BENCHMARK_CAPTURE(BM_BNNMaker, Default, Maker<BNNAggr>());
 BENCHMARK_CAPTURE(BM_BNNMaker, Dynamic, Maker<BNNAggr, LocalStorage, DynamicConfig>());
 BENCHMARK_CAPTURE(BM_BNNMaker, PreInit, Maker<BNNAggr, LocalStorage, PreInitConfig>());
 

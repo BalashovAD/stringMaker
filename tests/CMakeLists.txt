@@ -1,5 +1,3 @@
-# set THIRD_PARTY_DIR
-
 enable_testing()
 set(GTEST_DIR ${THIRD_PARTY_DIR}/googletest)
 add_subdirectory(${GTEST_DIR} ${CMAKE_BINARY_DIR}/googletest)
@@ -13,7 +11,11 @@ file(GLOB_RECURSE TEST_SOURCES
 add_executable(unit-tests ${TEST_SOURCES} ${LIB_SOURCES})
 target_link_libraries(unit-tests PRIVATE gtest gtest_main)
 
-#target_include_directories(unit-tests PRIVATE ${CMAKE_SOURCE_DIR}/single_include)
+if (${SingleInclude})
+    target_include_directories(unit-tests PRIVATE ${CMAKE_SOURCE_DIR}/single_include)
+else ()
+    target_include_directories(unit-tests PRIVATE ${CMAKE_SOURCE_DIR}/include)
+endif ()
 
 target_include_directories(unit-tests PRIVATE
         ${GTEST_DIR}/googletest/include)
