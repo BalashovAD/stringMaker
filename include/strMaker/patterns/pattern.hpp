@@ -16,7 +16,7 @@ concept IsPattern = requires {
 namespace details {
 
 template <IndexT size, IsConfig Cfg>
-void emptyInitMemory(CharIt mem, CharEnd end, Cfg const& cfg) noexcept {
+void emptyInitMemory(CharIt mem, [[maybe_unused]] CharEnd end, Cfg const& cfg) noexcept {
     cfg.memset(mem, cfg.neutralSymbol(), size);
 }
 

@@ -4,17 +4,19 @@
 #include "memory.hpp"
 #include "../utils/template.hpp"
 #include "../patterns/pattern.hpp"
+#include "../utils/pragmaHelper.hpp"
 
 #include <tuple>
 #include <numeric>
 #include <string_view>
+
 
 namespace mkr {
 
 template <IsPattern ...StrPattern>
 class Aggregator {
     template <size_t shift = 0, typename Fn, typename ...Args>
-    constexpr void foreach(Fn const& f, bool const& hasError, std::tuple<Args...> const& t) {
+    static constexpr void foreach(Fn const& f, bool const& hasError, std::tuple<Args...> const& t) {
         f(std::get<shift>(t), std::integral_constant<size_t, shift>{});
         if constexpr (shift + 1 < sizeof...(Args)) {
             if (!hasError) [[likely]] {
@@ -80,7 +82,10 @@ public:
                 }
                 hasError = diff == ERROR_INDEX;
                 // invalid `diff` will be checked at the start of the next arg processing
+                DISABLE_WARNING_PUSH
+                DISABLE_WARNING(-Warray-bounds)
                 it = currentPos + diff;
+                DISABLE_WARNING_POP
             } else {
                 it = begin + info.pos + info.size;
             }
@@ -124,7 +129,11 @@ public:
                     diff = pattern.generate(it, end, cfg);
                 }
                 hasError = diff == ERROR_INDEX;
+                // invalid `diff` will be checked at the start of the next arg processing
+                DISABLE_WARNING_PUSH
+                DISABLE_WARNING(-Warray-bounds)
                 it += diff;
+                DISABLE_WARNING_POP
             } else {
                 pattern.initMemory(it, end, cfg);
                 it += info.size;

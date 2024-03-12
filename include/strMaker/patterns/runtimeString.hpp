@@ -19,7 +19,7 @@ public:
     }
 
     template <IsConfig Config>
-    IndexT generate(CharIt mem, CharEnd end, Config const& cfg, std::string_view s) const noexcept {
+    IndexT generate(CharIt mem, [[maybe_unused]] CharEnd end, Config const& cfg, std::string_view s) const noexcept {
         if (s.size() > maxSize) [[unlikely]] {
             cfg.errorEvent();
             return ERROR_INDEX;

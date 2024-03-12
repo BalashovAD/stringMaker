@@ -13,7 +13,7 @@ public:
     static constexpr IndexT maxSize = str.size();
 
     template <typename Config>
-    void initMemory(CharIt mem, CharEnd end, Config const& cfg) const noexcept {
+    void initMemory(CharIt mem, [[maybe_unused]] CharEnd end, Config const& cfg) const noexcept {
         cfg.fill(mem, str);
     }
 };

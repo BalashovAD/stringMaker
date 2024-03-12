@@ -81,7 +81,7 @@ namespace helper {
 template <typename T>\
 concept Has_ ## VarName = requires {     \
     requires std::convertible_to<decltype(T::VarName), VarType>; \
-}
+};
 
 HAS_STATIC_VAR(maxSize, IndexT);
 HAS_STATIC_VAR(mkr_maxSize, IndexT);
@@ -719,24 +719,45 @@ concept IsPattern = requires {
 namespace details {
 
 template <IndexT size, IsConfig Cfg>
-void emptyInitMemory(CharIt mem, CharEnd end, Cfg const& cfg) noexcept {
+void emptyInitMemory(CharIt mem, [[maybe_unused]] CharEnd end, Cfg const& cfg) noexcept {
     cfg.memset(mem, cfg.neutralSymbol(), size);
 }
 
 }
 
 }
+// #include "../utils/pragmaHelper.hpp"
+
+
+#if defined(_MSC_VER)
+    #define DISABLE_WARNING_PUSH           __pragma(warning( push ))
+    #define DISABLE_WARNING_POP            __pragma(warning( pop ))
+    #define DISABLE_WARNING(warningNumber) __pragma(warning( disable : warningNumber ))
+
+#elif defined(__GNUC__) || defined(__clang__)
+    #define DO_PRAGMA(X) _Pragma(#X)
+    #define DISABLE_WARNING_PUSH           DO_PRAGMA(GCC diagnostic push)
+    #define DISABLE_WARNING_POP            DO_PRAGMA(GCC diagnostic pop)
+    #define DISABLE_WARNING(warningName)   DO_PRAGMA(GCC diagnostic ignored #warningName)
+
+#else
+    #define DISABLE_WARNING_PUSH
+    #define DISABLE_WARNING_POP
+    #define DISABLE_WARNING_UNREFERENCED_FORMAL_PARAMETER
+    #define DISABLE_WARNING_UNREFERENCED_FUNCTION
+#endif
 
 #include <tuple>
 #include <numeric>
 #include <string_view>
+
 
 namespace mkr {
 
 template <IsPattern ...StrPattern>
 class Aggregator {
     template <size_t shift = 0, typename Fn, typename ...Args>
-    constexpr void foreach(Fn const& f, bool const& hasError, std::tuple<Args...> const& t) {
+    static constexpr void foreach(Fn const& f, bool const& hasError, std::tuple<Args...> const& t) {
         f(std::get<shift>(t), std::integral_constant<size_t, shift>{});
         if constexpr (shift + 1 < sizeof...(Args)) {
             if (!hasError) [[likely]] {
@@ -802,7 +823,10 @@ public:
                 }
                 hasError = diff == ERROR_INDEX;
                 // invalid `diff` will be checked at the start of the next arg processing
+                DISABLE_WARNING_PUSH
+                DISABLE_WARNING(-Warray-bounds)
                 it = currentPos + diff;
+                DISABLE_WARNING_POP
             } else {
                 it = begin + info.pos + info.size;
             }
@@ -846,7 +870,11 @@ public:
                     diff = pattern.generate(it, end, cfg);
                 }
                 hasError = diff == ERROR_INDEX;
+                // invalid `diff` will be checked at the start of the next arg processing
+                DISABLE_WARNING_PUSH
+                DISABLE_WARNING(-Warray-bounds)
                 it += diff;
+                DISABLE_WARNING_POP
             } else {
                 pattern.initMemory(it, end, cfg);
                 it += info.size;
@@ -918,7 +946,7 @@ public:
     static constexpr IndexT maxSize = str.size();
 
     template <typename Config>
-    void initMemory(CharIt mem, CharEnd end, Config const& cfg) const noexcept {
+    void initMemory(CharIt mem, [[maybe_unused]] CharEnd end, Config const& cfg) const noexcept {
         cfg.fill(mem, str);
     }
 };
@@ -1094,7 +1122,7 @@ public:
     }
 
     template <IsConfig Config>
-    IndexT generate(CharIt mem, CharEnd end, Config const& cfg, std::string_view s) const noexcept {
+    IndexT generate(CharIt mem, [[maybe_unused]] CharEnd end, Config const& cfg, std::string_view s) const noexcept {
         if (s.size() > maxSize) [[unlikely]] {
             cfg.errorEvent();
             return ERROR_INDEX;
@@ -1210,7 +1238,7 @@ public:
     }
 
     template <IsConfig Config>
-    IndexT generate(CharIt mem, CharEnd end, Config const& cfg, Number n) const noexcept {
+    IndexT generate(CharIt mem, [[maybe_unused]] CharEnd end, Config const& cfg, Number n) const noexcept {
 
         auto result = std::to_chars(mem, mem + maxSize, n);
         if (result.ec != std::errc{}) [[unlikely]] {
@@ -1251,7 +1279,7 @@ public:
     }
 
     template <IsConfig Config>
-    IndexT generate(CharIt mem, CharEnd end, Config const& cfg, Number n) const noexcept {
+    IndexT generate(CharIt mem, [[maybe_unused]] CharEnd end, Config const& cfg, Number n) const noexcept {
 
         if (std::isnan(n)) [[unlikely]] {
             cfg.errorEvent();
@@ -1322,7 +1350,7 @@ public:
     }
 
     template <IsConfig Config, typename Arg>
-    IndexT generate(CharIt mem, CharEnd end, Config const& cfg, Arg&& arg) const {
+    IndexT generate(CharIt mem, [[maybe_unused]] CharEnd end, Config const& cfg, Arg&& arg) const {
 
         static_assert(details::explicitly_convertible_to<Arg, T>);
 

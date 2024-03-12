@@ -35,6 +35,8 @@ void printType() {
 using namespace testing;
 using namespace mkr;
 
+DISABLE_WARNING_PUSH
+DISABLE_WARNING(-Wunused-parameter)
 
 struct MyStruct {
     int a;
@@ -55,4 +57,3 @@ struct MyStruct {
         }
     }
 };
-

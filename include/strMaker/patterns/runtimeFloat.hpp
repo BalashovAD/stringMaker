@@ -23,7 +23,7 @@ public:
     }
 
     template <IsConfig Config>
-    IndexT generate(CharIt mem, CharEnd end, Config const& cfg, Number n) const noexcept {
+    IndexT generate(CharIt mem, [[maybe_unused]] CharEnd end, Config const& cfg, Number n) const noexcept {
 
         if (std::isnan(n)) [[unlikely]] {
             cfg.errorEvent();

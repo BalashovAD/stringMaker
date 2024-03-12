@@ -32,7 +32,7 @@ namespace helper {
 template <typename T>\
 concept Has_ ## VarName = requires {     \
     requires std::convertible_to<decltype(T::VarName), VarType>; \
-}
+};
 
 HAS_STATIC_VAR(maxSize, IndexT);
 HAS_STATIC_VAR(mkr_maxSize, IndexT);
