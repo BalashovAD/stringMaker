@@ -14,7 +14,7 @@ namespace mkr {
 template <IsPattern ...StrPattern>
 class Aggregator {
     template <size_t shift = 0, typename Fn, typename ...Args>
-    constexpr void foreach(Fn const& f, bool const& hasError, std::tuple<Args...> const& t) {
+    static constexpr void foreach(Fn const& f, bool const& hasError, std::tuple<Args...> const& t) {
         f(std::get<shift>(t), std::integral_constant<size_t, shift>{});
         if constexpr (shift + 1 < sizeof...(Args)) {
             if (!hasError) [[likely]] {
