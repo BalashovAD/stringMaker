@@ -8,6 +8,12 @@
 
 namespace mkr::details {
 
+template <typename ...Args>
+struct always_false : std::false_type {};
+
+template <typename ...Args>
+static constexpr bool AlwaysFalse = always_false<Args...>::type;
+
 template<class... Ts>
 struct overloaded : Ts... { using Ts::operator()...; };
 
@@ -51,7 +57,7 @@ constexpr auto getSize() {
     if constexpr (helper::Has_maxSize<PureT>) {
         return PureT::maxSize;
     } else {
-        static_assert(false, "Type should have maxSize");
+        static_assert(AlwaysFalse<PureT>, "Type should have maxSize");
         return 0;
     }
 }

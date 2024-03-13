@@ -1,4 +1,4 @@
-name: Manual Trigger Workflow
+name: GCC13-check
 
 on:
   workflow_dispatch:  # This event triggers the workflow manually.
@@ -7,7 +7,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Set up Clang
+      - name: Set up GCC-13
         uses: egor-tensin/setup-gcc@v1
         with:
           version: 13
