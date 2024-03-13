@@ -1,0 +1,24 @@
+name: Manual Trigger Workflow
+
+on:
+  workflow_dispatch:  # This event triggers the workflow manually.
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set up Clang
+        uses: egor-tensin/setup-gcc@v1
+        with:
+          version: 14
+          platform: x64
+      - uses: actions/checkout@v4
+        with:
+          submodules: 'true'
+      - name: Configure CMake Debug
+        run: cmake -B ${{github.workspace}}/build_debug -DCMAKE_BUILD_TYPE=Debug -DCODE_COVERAGE=OFF
+      - name: Build
+        run: cmake --build ${{github.workspace}}/build_debug --config Debug
+      - name: Test
+        working-directory: ${{github.workspace}}/build_debug/tests
+        run: ./unit-tests

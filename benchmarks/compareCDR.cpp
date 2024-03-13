@@ -162,7 +162,7 @@ std::vector<CDR> generateCases(unsigned size) {
 static inline auto BENCH_CASES = generateCases(TEST_SIZE);
 
 template <typename Maker>
-static void BM_mkrCDR(benchmark::State& state, Maker maker) {
+static void BM_CDR(benchmark::State& state, Maker maker) {
 
     for (auto _ : state) {
         for (auto i = 0; i != TEST_SIZE; ++i) {
@@ -259,10 +259,11 @@ using Aggr = Aggregator<
         RuntimeIntegral<long long, 13>, StaticStr<";"_str>, RuntimeIntegral<unsigned, 5>, StaticStr<";"_str>, RuntimeIntegral<unsigned, 5>,
         RuntimeStr<1>, StaticStr<";"_str>, RuntimeStr<3>>;
 
-BENCHMARK_CAPTURE(BM_mkrCDR, LocalStorage, Maker<Aggr, LocalStorage, DynamicConfig>());
-BENCHMARK_CAPTURE(BM_mkrCDR, RingStorage, Maker<Aggr, RingStorage::type, DynamicConfig>());
-BENCHMARK_CAPTURE(BM_mkrCDR, Default, Maker<Aggr, LocalStorage, DefaultConfig>());
-BENCHMARK(BM_mkrCDR_perfectCDR)->Name("BM_mkrCDR/perfectCDR");
+BENCHMARK_CAPTURE(BM_CDR, Dynamic, Maker<Aggr, LocalStorage, DynamicConfig>());
+BENCHMARK_CAPTURE(BM_CDR, RingDynamic, Maker<Aggr, RingStorage::type, DynamicConfig>());
+BENCHMARK_CAPTURE(BM_CDR, Default, Maker<Aggr, LocalStorage, DefaultConfig>());
+BENCHMARK_CAPTURE(BM_CDR, RingPreInitOnly, Maker<Aggr, RingStorage::type, PreInitOnlyConfig>());
+BENCHMARK(BM_mkrCDR_perfectCDR)->Name("BM_CDR/Perfect");
 
-BENCHMARK(BM_mkrCDR_formatCDR)->Name("BM_mkrCDR/formatCDR");
-BENCHMARK(BM_mkrCDR_streamCDR)->Name("BM_mkrCDR/streamCDR");
+BENCHMARK(BM_mkrCDR_formatCDR)->Name("BM_CDR/Format");
+BENCHMARK(BM_mkrCDR_streamCDR)->Name("BM_CDR/Stream");
