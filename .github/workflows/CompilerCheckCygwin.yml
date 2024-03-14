@@ -2,7 +2,7 @@ name: Cygwin
 
 on:
   workflow_dispatch:  # This event triggers the workflow manually.
-
+  push:
 jobs:
   build:
     runs-on: windows-latest
