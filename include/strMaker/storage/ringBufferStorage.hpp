@@ -23,7 +23,11 @@ public:
     Memory<maxSize>& getMemory() noexcept(!strictCheck) {
         if constexpr (strictCheck) {
             if (m_usedSlots == ringSize) [[unlikely]] {
+#ifdef __EXCEPTIONS
                 throw std::runtime_error("RingBufferStorage overflow");
+#else
+                exit(1);
+#endif
             }
             ++m_usedSlots;
         }

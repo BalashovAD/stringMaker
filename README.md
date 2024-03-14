@@ -1,38 +1,46 @@
 # String maker
 ![Build](https://github.com/balashovAD/stringMaker/actions/workflows/BuildLinux.yml/badge.svg)
-
-## Links
+- [Design goals](#Design-goals)
 - [Idea](#Idea)
 - [Examples](#Examples)
 - [Installation](#Installation)
-- [Built-in primitives](#Built-in)
+- [Built-in primitives](#Built-in-primitives)
 - [Benchmarks](#benchmarks)
 
+## Design goals
+Create a faster and more performance-focused library for generating `string`-like object with `format`-like interface,
+aimed at providing top performance in hot spots.
+### Highlights
+- No memory allocation
+- Concepts and compile time checks
+- Header only for straightforward integration
+- Zero abstraction code, optimized for hot path
+- Simplifies adding custom storage and serialization functions (See [CustomType](#customtype))
+- No exception and no runtime type information necessary (can be built with `-fno-exceptions` `-fno-rtti`)
+
 ## Idea
-This is zero-cost abstraction library for generating `std::string_view` with `std::format` like API,
-but without memory allocation and without copying compile time known strings. 
+String Maker is a zero-cost abstraction library designed for generating `std::string_view` with a `std::format`-like API, 
+without memory allocation and copying of compile-time known strings. 
+This library is especially useful for critical points in code where you need to create a temporary `string`-like object, 
+such as sending a network message, writing to shared memory, or even, in less time-sensitive scenarios, writing to a disk. 
 
-This library good for hot points in code than you need to make a `string` like object for short usage. 
-Like send network message or write it in shared memory or, in not so fast cases, to hard disk.
+Critical design involves knowing the maximum size for placeholders at compile time, manually specifying it, 
+or leveraging default size estimations for numerical patterns.
+Since `std::string_view` utilizing shared memory from `Maker`, it's essential to manage its lifecycle carefully. 
+The library pre-calculates the maximum result string size, pre-allocates memory, and initializes the buffer with constexpr strings, ensuring maximum efficiency.
 
-You should know all maximum size for each placeholder in the generation pattern, or use default calculated, like for numbers format.
-Because return `std::string_view` uses the common memory, you should control overuse manually.
-
-The core idea is to calculate maximum possible size of result string and pre-allocate memory for this,
-after, prepare the buffer by filling constexpr string. In active phase use only in place convert to string and `memcpy`.
-
-### Good for usage it if
-- You need really high performance
-- You need only `std::string_view` or can spend time for one creation `std::string`
-- Don't afraid long compile time, because of a lot of metaprogramming
+### Ideal Use Cases
+- You prioritize high performance.
+- You require `std::string_view` or can spend time for creating one `std::string`.
+- You are comfortable with longer compile times due to extensive metaprogramming.
 
 For `Default`, `PreInit` or `PreInitOnly` configs:
-- Output format has kind of 'neutral' symbol, like space in Json or Xml.
-- A lot of static (constexpr known) parts of result, compare to runtime values. Especially for `PreInitOnlyConfig`.
+- The output format requires a 'neutral' symbol, like spaces in JSON or XML.
+- There are many static (constexpr known) parts of the result compared to runtime values, especially for `PreInitOnlyConfig`.
 
-For `Dynamic`:
-- Want to have good formatted text, like in `format` output.
-- Any others case, universal solution, but can be slightly slower in theoretical situation
+For `Dynamic` configs:
+- You seek well-formatted text output similar to `format`.
+- You're looking for a universal solution, albeit potentially slightly slower in some cases.
 
 ## Examples
 
@@ -41,14 +49,20 @@ For `Dynamic`:
 std::string name = "Paul";
 std::string longName = "PaulPaulPaulPaul";
 
-using HelloName = mkr::MakeAggregator<"Hello {}!", mkr::RuntimeStr<10>>; // Name should have less than 11 symbols
-mkr::Maker<HelloName> maker; // Allocate and fill buffer `Hello ~~~~~~~~~~!` where `~` is place for name
-auto sv = maker.generate(name); // sv == `Hello Paul      !`
-auto sv2 = maker.generate(name); // Name cannot be placed, sv2 == ``, sv is in unknown state
+using HelloName = mkr::MakeAggregator<"Hello {}!"_str, mkr::RuntimeStr<10>>; 
+// Name should be less than 11 symbols (bytes)
+mkr::Maker<HelloName> maker; 
+// Allocate and fill buffer `Hello ~~~~~~~~~~!` where `~` is place for the name
+auto sv = maker.generate(name); 
+// sv == `Hello Paul      !`
+auto sv2 = maker.generate(name); 
+// Name cannot be placed, sv2 == ``, sv is in unknown state
 
 // Dynamic located
-mkr::Maker<HelloName, LocalStorage, DynamicConfig> maker; // Generate string without neutral symbols inside
-auto sv = maker.generate(name); // sv == `Hello Paul!`
+mkr::Maker<HelloName, LocalStorage, DynamicConfig> maker; 
+// Generate string without neutral symbols inside
+auto sv = maker.generate(name); 
+// sv == `Hello Paul!`
 ```
 ### Json
 ```cpp
@@ -58,23 +72,24 @@ using Json = MakeAggregator<R"({"small_int_field": {}, "string_field": {}, "obj_
 
 Maker<Json> maker;
 // ...
-maker.generate(5, "text", MyTime{}); // {"int_field": 5  , "string_field": "text"      , "obj_fields": {"custom": "03/2024", "static": 5}}
+maker.generate(5, "text", MyTime{}); 
+// {"int_field": 5  , "string_field": "text"      , "obj_fields": {"custom": "03/2024", "static": 5}}
 
 ```
 ## Installation
 This header only library requires a **c++20** compiler, requires Clang-17, MinGW13 or GCC-13 compiler.  
-> gcc-13.1.0 has internal bug: `internal compiler error: in is_base_type, at dwarf2out.cc:13417`
+> Note: gcc-13.1.0 has internal bug: `internal compiler error: in is_base_type, at dwarf2out.cc:13417`
 
 ![Clang-17](https://github.com/balashovAD/stringMaker/actions/workflows/CompilerCheckClang17.yml/badge.svg)
 ![GCC-13](https://github.com/balashovAD/stringMaker/actions/workflows/CompilerCheckGCC13.yml/badge.svg)
 
 You can include the library as a git submodule in your project and add
-`target_include_directories(prj PRIVATE ${PARSECPP_INCLUDE_DIR})` to your `CMakeLists.txt` file.
+`target_include_directories(prj PRIVATE ${STRMAKER_INCLUDE_DIR})` to your `CMakeLists.txt` file.
 
 Alternatively, you can copy & paste the `single_include` headers to your project's include path.
-Use `all.hpp` as the base parser header, while `fwd.hpp` (1000 lines) contains only general definition without implementations.
+Use `all.hpp` as the base header, while `fwd.hpp` (1000 lines) contains only general definition without implementations.
 
-## Built-in
+## Built-in primitives
 ### Pattern
 ##### `RuntimeStr`
 > Param: maxSize  
@@ -103,14 +118,19 @@ Use `all.hpp` as the base parser header, while `fwd.hpp` (1000 lines) contains o
 ##### `Apply`
 > Param: Pattern | IsPattern  
 > Param: auto fn | fn(Arg) is suitable for Pattern  
-> Arg fnArg 
+> Arg fn Arg 
+
 ### Storage
 ##### `LocalStorage`
-`Memory<MaxSize>`
+> Uses `Memory<MaxSize>`
+
+Local storing one buffer for `string_view`
 ##### `RingBufferStorage`
 > Param: size_t ringSize
 
-`std::array<Memory<maxSize>, ringSize>`
+> `std::array<Memory<maxSize>, ringSize>`
+
+Local storing `ringSize` buffers for `string_view`
 ### Config
 ##### `DefaultConfig`
 ##### `DynamicConfig`
@@ -118,10 +138,13 @@ Use `all.hpp` as the base parser header, while `fwd.hpp` (1000 lines) contains o
 ##### `PreInitOnlyConfig`
 
 ## Benchmarks
-- `BM_CDR`: CSV format with a lot of integer and string fields, better use with `DynamicConfig`. Heavy for linux `timestamp` to local time call.
-- `BM_OKX`: Json format, good for `Default` or `PreInitOnly`
-- `BM_BNN`: Http request line format, should use with `DynamicConfig`
-Lower values is better.
+- `BM_CDR`: CSV format, with numerous unsigned integer and string fields. 
+Best result formatting observed using `DynamicConfig`.   
+_Note_: Particularly resource-intensive for converting Linux `timestamp` to local time.
+- `BM_OKX`: Json format, showing optimal results with either `DefaultConfig` or `PreInitOnlyConfig`
+- `BM_BNN`: Http request line format, should be used with `DynamicConfig`
+
+In these benchmarks, lower values indicate better performance, reflecting the library's effectiveness in processing and converting data with minimal resource utilization.
 
 | *                 | BM_CDR     | BM_OKX     | BM_BNN     | Slowdown (Avg) |
 |-------------------|------------|------------|------------|----------------|
