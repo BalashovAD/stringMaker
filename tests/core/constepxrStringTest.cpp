@@ -7,6 +7,11 @@ TEST(ConstexprString, Common) {
     EXPECT_EQ(str.sv(), "test");
 }
 
+TEST(ConstexprString, RawString) {
+    auto str = R"(te"st)"_str;
+    EXPECT_EQ(str.sv(), "te\"st");
+}
+
 TEST(ConstexprString, Repeat) {
     auto str = ("test"_str).repeat<2>();
     EXPECT_EQ(str.sv(), "testtest");

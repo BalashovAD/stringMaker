@@ -1,4 +1,4 @@
-name: Clang17-check
+name: Clang17
 
 on:
   workflow_dispatch:  # This event triggers the workflow manually.
