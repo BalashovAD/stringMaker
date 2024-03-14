@@ -7,11 +7,9 @@ jobs:
   build:
     runs-on: windows-latest
     steps:
-      - name: Set up Clang
+      - name: Set up cygwin
         uses: egor-tensin/setup-cygwin@v4
-        with:
-          version: 12
-          platform: x64
+
       - uses: actions/checkout@v4
         with:
           submodules: 'true'
