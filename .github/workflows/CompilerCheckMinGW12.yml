@@ -8,13 +8,15 @@ jobs:
     runs-on: windows-latest
     steps:
       - name: Set up minGW
-        uses: egor-tensin/setup-mingw@v2
+        uses: egor-tensin/setup-mingw@v2.2
+        with:
+          version: 12
 
       - uses: actions/checkout@v4
         with:
           submodules: 'true'
       - name: Configure CMake Debug
-        run: cmake -B ${{github.workspace}}/build_debug -DCMAKE_BUILD_TYPE=Debug -DCODE_COVERAGE=OFF
+        run: cmake -B ${{github.workspace}}/build_debug -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=Debug -DCODE_COVERAGE=OFF
       - name: Build
         run: cmake --build ${{github.workspace}}/build_debug --config Debug
       - name: Test
