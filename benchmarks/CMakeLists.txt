@@ -14,6 +14,10 @@ file(GLOB_RECURSE BENCHMARK_SOURCES
 
 add_executable(bench ${BENCHMARK_SOURCES} ${LIB_SOURCES})
 
+# False positive
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-stringop-overflow")
+
+
 target_include_directories(bench PRIVATE
         ${BENCHMARK_DIR}/include)
 target_link_libraries(bench ${BENCHMARK_LIBRARIES})
