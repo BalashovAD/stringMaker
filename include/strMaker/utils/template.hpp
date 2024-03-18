@@ -12,7 +12,7 @@ template <typename ...Args>
 struct always_false : std::false_type {};
 
 template <typename ...Args>
-static constexpr bool AlwaysFalse = always_false<Args...>::type;
+static constexpr bool AlwaysFalse = always_false<Args...>::value;
 
 template<class... Ts>
 struct overloaded : Ts... { using Ts::operator()...; };

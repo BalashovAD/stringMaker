@@ -61,7 +61,7 @@ template <typename ...Args>
 struct always_false : std::false_type {};
 
 template <typename ...Args>
-static constexpr bool AlwaysFalse = always_false<Args...>::type;
+static constexpr bool AlwaysFalse = always_false<Args...>::value;
 
 template<class... Ts>
 struct overloaded : Ts... { using Ts::operator()...; };
@@ -1006,39 +1006,38 @@ consteval auto split() {
 }
 
 template <typename Skip, typename Arg, typename ...Args>
-consteval auto optimizer1(Arg, Args... args) {
+consteval auto optimizer1() {
     auto const next = ([&]() {
         if constexpr (sizeof...(Args) == 0) {
             return std::tuple();
         } else {
-            return optimizer1<Skip>(args...);
+            return optimizer1<Skip, Args...>();
         }
     })();
 
     if constexpr (Skip::template check<Arg>()) {
         return next;
     } else {
-        return std::tuple_cat(std::make_tuple<Arg>({}), next);
+        return std::tuple_cat(std::tuple<Arg>(), next);
     }
 }
 
 template <typename Arg1, typename Arg2, typename ...Args>
-consteval auto optimizer2(Arg1 const& , Arg2 const& arg2, Args const&...args) {
-
+consteval auto optimizer2() {
 
     if constexpr (details::is_value_template<Arg1, StaticStr> && details::is_value_template<Arg2, StaticStr>) {
         using NewStr = StaticStr<Arg1::str + Arg2::str>;
         if constexpr (sizeof...(Args) == 0) {
             return std::tuple<NewStr>();
         } else {
-            return optimizer2(NewStr{}, args...);
+            return optimizer2<NewStr, Args...>();
         }
     } else {
         auto const next = ([&]() {
             if constexpr (sizeof...(Args) >= 1) {
-                return optimizer2(arg2, args...);
+                return optimizer2<Arg2, Args...>();
             } else { // (sizeof...(Args) == 0)
-                return std::tuple<Arg2>();
+                return std::tuple<Arg2>({});
             }
         })();
         return std::tuple_cat(std::tuple<Arg1>(), next);
@@ -1064,15 +1063,20 @@ struct Combine : Args... {
 
 template <typename Arg> requires(details::is_template<Arg, std::tuple> && std::tuple_size_v<Arg> >= 1)
 using Optimize1 = decltype(std::apply([](auto ...args) {
-    return optimizer1<StaticStrZeroSize>(args...);
+    return optimizer1<StaticStrZeroSize, decltype(args)...>();
 }, std::declval<Arg>()));
+
+template <typename Arg>
+struct FixForGcc13 {
+    using type = Optimize1<Arg>;
+};
 
 
 template <typename Arg> requires(details::is_template<Arg, std::tuple>)
 struct Optimize2 {
-    using type = decltype(std::apply([](auto&& ...args) {
+    using type = decltype(std::apply([](auto ...args) {
         if constexpr (sizeof...(args) >= 2) {
-            return optimizer2(args...);
+            return optimizer2<decltype(args)...>();
         } else {
             return std::make_tuple<details::GetIthType<0, decltype(args)...>>({});
         }
@@ -1093,9 +1097,9 @@ struct MakeAggregatorImpl {
     using Unoptimized = decltype(details::split<str.size(), str, Args...>());
 
     using Opt1 = Optimize1<Unoptimized>;
-    static_assert(std::tuple_size<Opt1>::value > 0, "No one template after opt1");
+    static_assert(std::tuple_size_v<Opt1> > 0, "No one template after opt1");
     using Opt2 = Optimize2<Opt1>::type;
-    static_assert(std::tuple_size<Opt2>::value > 0, "No one template after opt2");
+    static_assert(std::tuple_size_v<Opt2> > 0, "No one template after opt2");
 
     using type = details::AggWrapper<Opt2>::type;
 };

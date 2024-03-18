@@ -7,7 +7,7 @@ option(SingleInclude         "Use single_include directory" OFF)
 option(EnableHardBenchmark   "Enable test benchmarks" OFF)
 
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror -Wall -Wextra -Wpedantic")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror -Wall -Wextra -Wpedantic -freport-bug")
 
 # Disable some warnings
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-error=old-style-cast")
