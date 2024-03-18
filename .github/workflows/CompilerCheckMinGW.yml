@@ -6,12 +6,12 @@ on:
 
 jobs:
   build:
-    runs-on: windows-latest
+    runs-on: windows-2019
     steps:
       - name: Set up minGW
         uses: egor-tensin/setup-mingw@v2.2.0
         with:
-          version: latest
+          version: 13
 
       - uses: actions/checkout@v4
         with:
