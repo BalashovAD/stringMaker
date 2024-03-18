@@ -89,6 +89,8 @@ using Optimize1 = decltype(std::apply([](auto ...args) {
     return optimizer1<StaticStrZeroSize, decltype(args)...>();
 }, std::declval<Arg>()));
 
+
+// This dummy wrapper needs to fix gcc internal compiler bug
 template <typename Arg>
 struct FixForGcc13 {
     using type = Optimize1<Arg>;
@@ -119,7 +121,7 @@ struct MakeAggregatorImpl {
     static_assert(sizeof...(Args) > 0);
     using Unoptimized = decltype(details::split<str.size(), str, Args...>());
 
-    using Opt1 = Optimize1<Unoptimized>;
+    using Opt1 = FixForGcc13<Unoptimized>::type;
     static_assert(std::tuple_size_v<Opt1> > 0, "No one template after opt1");
     using Opt2 = Optimize2<Opt1>::type;
     static_assert(std::tuple_size_v<Opt2> > 0, "No one template after opt2");
