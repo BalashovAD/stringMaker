@@ -48,7 +48,7 @@ HAS_STATIC_VAR(dynamicLocated, bool);
 
 #undef HAS_STATIC_VAR
 
-}
+} // helper
 
 template <typename T>
 constexpr auto getSize() {
@@ -73,7 +73,6 @@ constexpr auto isPermanent() {
     }
 }
 
-
 template <typename T>
 constexpr auto checkNeedVariable() {
     using PureT = std::remove_cvref_t<T>;
@@ -84,8 +83,6 @@ constexpr auto checkNeedVariable() {
         return false;
     }
 }
-
-
 
 template <typename T>
 constexpr auto isDynamicLocated() {
@@ -147,9 +144,7 @@ struct GetIthTypeT {
     using type = std::conditional_t<shift == 0, Id<Arg1>, NextStep>::type;
 };
 
-}
-
-
+} // helper
 
 
 template <size_t shift, typename ...Args>

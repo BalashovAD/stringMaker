@@ -16,7 +16,7 @@ aimed at providing top performance in hot spots.
 - Header only for straightforward integration
 - Zero abstraction code, optimized for hot path
 - Simplifies adding custom storage and serialization functions (See [CustomType](#customtype))
-- No exception and no runtime type information necessary (can be built with `-fno-exceptions` `-fno-rtti`)
+- No exception and no runtime type information necessary (can be built with `-fno-exceptions -fno-rtti`)
 
 ## Idea
 String Maker is a zero-cost abstraction library designed for generating `std::string_view` with a `std::format`-like API, 
@@ -82,6 +82,7 @@ This header only library requires a **c++20** compiler, requires Clang-17, MinGW
 
 ![Clang-17](https://github.com/balashovAD/stringMaker/actions/workflows/CompilerCheckClang17.yml/badge.svg)
 ![GCC-13](https://github.com/balashovAD/stringMaker/actions/workflows/CompilerCheckGCC13.yml/badge.svg)
+![MinGW](https://github.com/balashovAD/stringMaker/actions/workflows/CompilerCheckMinGW.yml/badge.svg)
 
 You can include the library as a git submodule in your project and add
 `target_include_directories(prj PRIVATE ${STRMAKER_INCLUDE_DIR})` to your `CMakeLists.txt` file.

@@ -94,7 +94,7 @@ HAS_STATIC_VAR(dynamicLocated, bool);
 
 #undef HAS_STATIC_VAR
 
-}
+} // helper
 
 template <typename T>
 constexpr auto getSize() {
@@ -119,7 +119,6 @@ constexpr auto isPermanent() {
     }
 }
 
-
 template <typename T>
 constexpr auto checkNeedVariable() {
     using PureT = std::remove_cvref_t<T>;
@@ -130,8 +129,6 @@ constexpr auto checkNeedVariable() {
         return false;
     }
 }
-
-
 
 template <typename T>
 constexpr auto isDynamicLocated() {
@@ -193,9 +190,7 @@ struct GetIthTypeT {
     using type = std::conditional_t<shift == 0, Id<Arg1>, NextStep>::type;
 };
 
-}
-
-
+} // helper
 
 
 template <size_t shift, typename ...Args>
@@ -1063,6 +1058,8 @@ using Optimize1 = decltype(std::apply([](auto ...args) {
     return optimizer1<StaticStrZeroSize, decltype(args)...>();
 }, std::declval<Arg>()));
 
+
+// This dummy wrapper needs to fix gcc internal compiler bug
 template <typename Arg>
 struct FixForGcc13 {
     using type = Optimize1<Arg>;
@@ -1093,7 +1090,7 @@ struct MakeAggregatorImpl {
     static_assert(sizeof...(Args) > 0);
     using Unoptimized = decltype(details::split<str.size(), str, Args...>());
 
-    using Opt1 = Optimize1<Unoptimized>;
+    using Opt1 = FixForGcc13<Unoptimized>::type;
     static_assert(std::tuple_size_v<Opt1> > 0, "No one template after opt1");
     using Opt2 = Optimize2<Opt1>::type;
     static_assert(std::tuple_size_v<Opt2> > 0, "No one template after opt2");

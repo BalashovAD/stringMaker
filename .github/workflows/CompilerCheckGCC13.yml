@@ -2,6 +2,7 @@ name: GCC13
 
 on:
   workflow_dispatch:  # This event triggers the workflow manually.
+  push:
 
 jobs:
   build:
