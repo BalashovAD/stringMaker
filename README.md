@@ -78,11 +78,9 @@ maker.generate(5, "text", MyTime{});
 ```
 ## Installation
 This header only library requires a **c++20** compiler, requires Clang-17, MinGW13 or GCC-13 compiler.  
-> Note: gcc-13.1.0 has internal bug: `internal compiler error: in is_base_type, at dwarf2out.cc:13417`
 
 ![Clang-17](https://github.com/balashovAD/stringMaker/actions/workflows/CompilerCheckClang17.yml/badge.svg)
 ![GCC-13](https://github.com/balashovAD/stringMaker/actions/workflows/CompilerCheckGCC13.yml/badge.svg)
-![MinGW](https://github.com/balashovAD/stringMaker/actions/workflows/CompilerCheckMinGW.yml/badge.svg)
 
 You can include the library as a git submodule in your project and add
 `target_include_directories(prj PRIVATE ${STRMAKER_INCLUDE_DIR})` to your `CMakeLists.txt` file.

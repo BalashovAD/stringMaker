@@ -15,7 +15,9 @@ file(GLOB_RECURSE BENCHMARK_SOURCES
 add_executable(bench ${BENCHMARK_SOURCES} ${LIB_SOURCES})
 
 # False positive
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-stringop-overflow")
+if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    target_compile_options(bench PRIVATE -Wno-stringop-overflow)
+endif()
 
 
 target_include_directories(bench PRIVATE
