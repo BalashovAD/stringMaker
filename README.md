@@ -145,12 +145,41 @@ _Note_: Particularly resource-intensive for converting Linux `timestamp` to loca
 
 In these benchmarks, lower values indicate better performance, reflecting the library's effectiveness in processing and converting data with minimal resource utilization.
 
-| *                 | BM_CDR     | BM_OKX     | BM_BNN     | Slowdown (Avg) |
-|-------------------|------------|------------|------------|----------------|
-| Default           | 599.888us  | 92.072us   | 130.615us  | 1x             |
-| Dynamic           | 530.134us  | 94.164us   | 102.539us  | 0.98x          |
-| RingPreInitOnly   | 530.134us  | 88.933us   | 108.817us  | 0.99x          |
-| Format            | 5580.36us  | 669.643us  | 655.692us  | 10.43x         |
-| Stream            | 8159.72us  | 2949.3us   | 3928.07us  | 20.25x         |
-| Perfect           | 531.25us   | 87.193us   | 107.422us  | 0.99x          |
+> Windows, MinGW
 
+| *                 | BM_CDR     | BM_OKX     | BM_BNN     | Slowdown   |
+|-------------------|------------|------------|------------|------------|
+| Default           | 613.839us  | 96.257us   | 119.978us  | 1.09x      |
+| Dynamic           | 562.5us    | 94.164us   | 107.422us  | 1.01x      |
+| RingDynamic       | 571.987us  | 100.442us  | 111.607us  | 1.05x      |
+| RingPreInitOnly   | 558.036us  | 92.425us   | 109.863us  | 1.01x      |
+| Perfect           | 544.085us  | 89.979us   | 112.305us  | 1x         |
+| Format            | 5580.36us  | 680.106us  | 669.643us  | 7.93x      |
+| Stream            | 7986.11us  | 3012.05us  | 3997.09us  | 27.9x      |
+
+
+
+> Linux, GCC-13.2.0
+
+| *                 | BM_CDR     | BM_OKX     | BM_BNN     | Slowdown   |
+|-------------------|------------|------------|------------|------------|
+| Default           | 2217.18us  | 88.751us   | 120.848us  | 1.05x      |
+| Dynamic           | 2183.88us  | 92.856us   | 122.258us  | 1.06x      |
+| RingDynamic       | 2186.04us  | 90.572us   | 106.114us  | 1.01x      |
+| RingPreInitOnly   | 2179.9us   | 92.251us   | 105.447us  | 1.01x      |
+| Perfect           | 2170.39us  | 84.928us   | 112.056us  | 1x         |
+| Format            | 3630.24us  | 402.263us  | 417.427us  | 3.38x      |
+| Stream            | 3095.51us  | 830.098us  | 865.985us  | 6.31x      |
+
+
+> Linux, Clang-17
+
+| *                 | BM_CDR     | BM_OKX     | BM_BNN     | Slowdown   |
+|-------------------|------------|------------|------------|------------|
+| Default           | 2199.52us  | 89.157us   | 109.417us  | 1.05x      |
+| Dynamic           | 2161.29us  | 92.928us   | 116.354us  | 1.08x      |
+| RingDynamic       | 2152.45us  | 93.295us   | 105.601us  | 1.04x      |
+| RingPreInitOnly   | 2152.79us  | 87.87us    | 103.922us  | 1.02x      |
+| Perfect           | 2133.58us  | 85.143us   | 103.413us  | 1x         |
+| Format            | 3577.11us  | 371.23us   | 382.121us  | 3.24x      |
+| Stream            | 3059.17us  | 790.37us   | 830.772us  | 6.25x      |
