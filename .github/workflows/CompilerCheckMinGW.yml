@@ -1,22 +1,22 @@
-name: GCC13
+name: MinGW
 
 on:
   workflow_dispatch:  # This event triggers the workflow manually.
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: windows-2019
     steps:
-      - name: Set up GCC-13
-        uses: egor-tensin/setup-gcc@v1
-        with:
-          version: 13
-          platform: x64
+#      - name: Set up minGW
+#        uses: egor-tensin/setup-mingw@v2.2.0
+#        with:
+#          version: 13.2.0
+
       - uses: actions/checkout@v4
         with:
           submodules: 'true'
       - name: Configure CMake Debug
-        run: cmake -B ${{github.workspace}}/build_debug -DCMAKE_BUILD_TYPE=Debug -DCODE_COVERAGE=OFF
+        run: cmake -B ${{github.workspace}}/build_debug -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=Debug -DCODE_COVERAGE=OFF
       - name: Build
         run: cmake --build ${{github.workspace}}/build_debug --config Debug
       - name: Test
